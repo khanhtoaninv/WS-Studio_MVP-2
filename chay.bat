@@ -23,6 +23,10 @@ title ws-studio
 
 echo.
 echo === ws-studio: kiem tra va mo app ===
+rem Ban chay.bat trong thu muc cai dat goi lai: bo qua buoc tai, da lam o lan goi ngoai
+if "%WS_INNER%"=="1" goto :afterget
+rem Tat moi may chu ws-studio cu (node) de trang luon dung may chu moi nhat
+taskkill /F /IM node.exe >nul 2>nul && echo       Da tat may chu cu dang chay.
 where git >nul 2>nul
 if errorlevel 1 goto :nogit
 
@@ -44,6 +48,12 @@ if errorlevel 1 (
 
 :afterget
 cd /d "%DIR%"
+rem Tep nay co the la ban cu (vi du ban de o Desktop): chuyen sang ban moi nhat trong thu muc cai dat
+if not "%WS_INNER%"=="1" if /i not "%~f0"=="%DIR%\chay.bat" if exist "%DIR%\chay.bat" (
+  set "WS_INNER=1"
+  call "%DIR%\chay.bat"
+  goto :eof
+)
 for /f %%h in ('git rev-parse --short HEAD') do echo       Phien ban ma: %%h
 
 where node >nul 2>nul

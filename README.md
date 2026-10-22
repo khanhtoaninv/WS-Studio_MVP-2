@@ -13,7 +13,7 @@ Bản v2 giữ nguyên chức năng của prototype (259 kiểm tra t1–t8 vẫ
 
 Tải [`chay.bat`](chay.bat) về máy (ví dụ để ở Desktop) rồi bấm đúp. Cửa sổ luôn ở lại để đọc thông báo và lỗi; nếu nó báo lỗi, chụp màn hình gửi lại. Mỗi lần mở, tệp này tự lấy bản mới nhất từ GitHub vào `%USERPROFILE%\WS-Studio_MVP-2`, cài thư viện khi cần, rồi mở app trong trình duyệt. Lần đầu nó hỏi `ANTHROPIC_API_KEY` (bấm Enter để bỏ qua và dùng AI giả lập) và lưu vào `.env` trong thư mục đó.
 
-Cần [Git for Windows](https://git-scm.com/download/win) (`winget install Git.Git`). Có thêm Node.js 20+ (`winget install OpenJS.NodeJS.LTS`) thì app chạy với Claude; không có Node thì mở bản một tệp với AI giả lập. Thư mục cài do `chay.bat` quản lý: sửa tay trong đó sẽ bị ghi đè ở lần chạy sau, còn `.env` được giữ.
+Cần [Git for Windows](https://git-scm.com/download/win) (`winget install Git.Git`). Có thêm Node.js 20+ (`winget install OpenJS.NodeJS.LTS`) thì app chạy với Claude; không có Node thì mở bản một tệp với AI giả lập. Mỗi lần chạy, `chay.bat` tắt mọi tiến trình Node đang chạy (máy chủ ws-studio cũ) rồi mới mở bản mới, và luôn chạy bản `chay.bat` mới nhất trong thư mục cài đặt, nên tệp ở Desktop không cần tải lại. Thư mục cài do `chay.bat` quản lý: sửa tay trong đó sẽ bị ghi đè ở lần chạy sau, còn `.env` được giữ.
 
 ## Chạy trên máy
 
