@@ -37,7 +37,12 @@ function draw(){
   const head = `<div class="page-head"><div><h1>Làm bài trên lớp</h1><div class="desc">${esc(ws.title)} · ${esc(ws.code)} v${ws.versionNo}</div></div>
     <div class="row">${UI.btn('← Xem phiếu', { a:'go', size:'sm', kind:'ghost', data:{ href:`#/xem/${ws.id}?kind=teacher` } })}</div></div>`;
   if(!svc()){
-    main.innerHTML = `<div class="page">${head}${UI.empty('Cần mở app qua máy chủ', 'Làm bài trên lớp chạy trên máy chủ của máy giáo viên. Mở app bằng chay.bat (hoặc npm run dev), cho học sinh vào cùng Wi-Fi.')}</div>`; return;
+    const why = !/^https?:$/.test(location.protocol)
+      ? ['Đang mở tệp HTML trực tiếp', 'Trang này đang mở bằng tệp (địa chỉ bắt đầu bằng file://), nên không có máy chủ. Đóng trang này, chạy chay.bat (hoặc npm run dev) và mở địa chỉ http://localhost:5173.']
+      : WS.services.config.server
+        ? ['Máy chủ đang chạy là bản cũ', 'Máy chủ chưa có tính năng Làm bài trên lớp. Đóng cửa sổ máy chủ (cửa sổ đang chạy chay.bat hoặc npm run dev), rồi chạy lại để lấy bản mới nhất.']
+        : ['Không kết nối được máy chủ', 'Trang đang mở qua http nhưng không gọi được /api/health. Kiểm tra cửa sổ máy chủ còn chạy không, rồi tải lại trang.'];
+    main.innerHTML = `<div class="page">${head}${UI.empty(why[0], why[1])}<div class="small muted" style="text-align:center;margin-top:8px">Địa chỉ đang mở: <code>${esc(location.origin === 'null' ? location.href.slice(0, 60) : location.origin)}</code></div></div>`; return;
   }
   if(!['approved', 'published'].includes(ws.status)){
     main.innerHTML = `<div class="page">${head}${UI.empty('Phiếu chưa được duyệt cấp 2', 'Chỉ phiếu đã duyệt mới mở phiên làm bài trên lớp.')}</div>`; return;
