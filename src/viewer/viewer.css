@@ -250,3 +250,7 @@
   .wb{min-height:44px;min-width:44px}
   .wsv-content{padding:40px 28px}
 }
+/* D-134: nút ngắt trang trong Preview của trình soạn */
+.wsx .brk-hook{position:absolute;left:50%;top:-19px;transform:translateX(-50%);font-family:var(--sansc);font-size:11.5px;border:1px dashed #9FB2E3;background:#fff;color:#1F46A8;border-radius:6px;padding:1px 8px;cursor:pointer;opacity:0;z-index:4}
+.wsx:hover .brk-hook,.wsx .brk-hook:focus{opacity:1}
+@media print{ .brk-hook,.edit-hook{display:none!important} }

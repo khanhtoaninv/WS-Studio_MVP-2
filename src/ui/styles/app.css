@@ -486,3 +486,9 @@ textarea.inp{height:auto;padding:8px 10px;resize:vertical;line-height:1.45}
 .cov-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border-radius:7px;font-size:13.5px}
 .cov-row.miss{background:var(--warn-soft)}
 .cov-miss{color:var(--warn);display:flex;gap:8px;align-items:center}
+/* D-134: ngắt trang và giữ trọn bài */
+.ex-page{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.tog{font:inherit;font-size:12.5px;border:1px solid var(--line-2);background:var(--paper);color:var(--ink-2);border-radius:7px;padding:3px 10px;cursor:pointer}
+.tog.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-2);font-weight:600}
+.tog:disabled{opacity:.55;cursor:not-allowed}
+.toc-brk{display:block;font-size:11px;line-height:1;color:var(--accent);margin-top:2px}

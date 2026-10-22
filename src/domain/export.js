@@ -39,7 +39,9 @@ EX.viewerData = (ws, kind, o={}) => {
   const items = ws.items.map((it, idx) => {
     const ex = Q.ex(it.exerciseId); if(!ex) return null;
     const d = EX.itemDraft(ws, it, o.useDraft);
-    return EX.itemView(ex, d, idx, it.layout||d.layout||'L1', T);
+    const v = EX.itemView(ex, d, idx, it.layout||d.layout||'L1', T);
+    v.breakBefore = !!it.breakBefore; if(it.keep!=null) v.keep = !!it.keep;
+    return v;
   }).filter(Boolean);
   const exportedBy = Q.me().full;
   return {
@@ -63,7 +65,7 @@ EX.sampleItem = (lessonId, b, i, themeId) => {
 };
 EX.sampleData = (c, blocks) => {
   const lessons = c.lessonIds.filter(Boolean); const th = c.themeId && Q.theme(c.themeId);
-  const items = blocks.map((b,i)=>EX.sampleItem(lessons[i % lessons.length], b, i, c.themeId)).filter(Boolean);
+  const items = blocks.map((b,i)=>{ const v = EX.sampleItem(lessons[i % lessons.length], b, i, c.themeId); if(v){ v.breakBefore = !!b.breakBefore; if(b.keep!=null) v.keep = !!b.keep; } return v; }).filter(Boolean);
   return {meta:{code:'WS-NHÁP', version:1, kind:'teacher', title:c.title||Q.lessonShort(lessons[0]), lesson:Q.lessonShort(lessons[0]), theme:th?{name:th.name, emoji:th.emoji}:null, pagesTarget:c.pages},
     items, qfb:null, mediaFail:false};
 };

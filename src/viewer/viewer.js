@@ -230,7 +230,7 @@ WSV.blockUnits = function(it, idx, opts){
     units.push({kind:'whole', html:head+wb+body}); return {units:units, L:L};
   }
   if(L==='L2'){ units.push({kind:'whole', html:head+'<div class="lay2"><div>'+passageHTML(it,T)+wb+qs.join('')+'</div><div class="side">'+mediaHTML(it,opts,true)+'</div></div>'}); return {units:units,L:L}; }
-  if(L==='L3'){ units.push({kind:'whole', html:head+'<div class="lay3"><div>'+passageHTML(it,T)+mediaHTML(it,opts)+'</div><div>'+wb+qs.join('')+'</div></div>'}); return {units:units,L:L}; }
+  if(L==='L3'){ var left = passageHTML(it,T)+mediaHTML(it,opts); units.push({kind:'whole', html:head+'<div class="lay3"><div>'+left+'</div><div>'+wb+qs.join('')+'</div></div>', parts:{head:head, left:left, wb:wb, qs:qs}}); return {units:units,L:L}; }
   units.push({kind:'head', html:head+mediaHTML(it,opts)+passageHTML(it,T)+wb});
   if(L==='L4'){ for(var k=0;k<qs.length;k+=2) units.push({kind:'q', html:'<div class="qgrid">'+qs[k]+(qs[k+1]||'')+'</div>'}); }
   else qs.forEach(function(h){ units.push({kind:'q', html:h}); });
@@ -244,6 +244,9 @@ WSV.sheetHead = function(d){
 
 /* pagination using real measurement */
 WSV.PAGE_LIMIT = 1123-56-60-26;
+/* D-134: bài giữ trọn trang; mặc định bật với bài có đoạn văn và bài nối, giáo viên bật/tắt từng bài (it.keep) */
+WSV.KEEP_TYPES = ['tfng','cloze_mcq','short_answer','matching'];
+WSV.keepOf = function(it){ return it.keep!=null ? !!it.keep : WSV.KEEP_TYPES.indexOf(it.type)>=0; };
 WSV.paginate = function(root, d, opts){
   var meas = document.createElement('div');
   meas.className = 'wsv'+(opts.compact?' compact':''); meas.style.cssText='position:absolute;left:-30000px;top:0;width:794px;height:auto;visibility:hidden;display:block';
@@ -252,24 +255,46 @@ WSV.paginate = function(root, d, opts){
   var box = meas.firstChild;
   var LIMIT = WSV.PAGE_LIMIT;
   box.innerHTML = WSV.sheetHead(d); var headH = box.offsetHeight;
+  var measure = function(u){ box.innerHTML = '<section class="wsx'+(u.L==='L4'?' lay4':'')+'">'+u.html+'</section>'; return box.firstChild.offsetHeight; };
   var all = [];
   d.items.forEach(function(it, idx){
-    var b = WSV.blockUnits(it, idx, opts);
-    b.units.forEach(function(u,k){ u.ex = it.id; u.idx = idx; u.L = b.L; u.first = k===0; u.title = it.title; all.push(u); });
+    var b = WSV.blockUnits(it, idx, opts), units = b.units, tot = 0;
+    units.forEach(function(u,k){ u.L = b.L; u.ex = it.id; u.idx = idx; u.first = k===0; u.title = it.title; u.h = measure(u); tot += u.h; all.push(u); });
+    units[0].tot = tot; units[0].brk = !!it.breakBefore; units[0].keep = WSV.keepOf(it);
   });
-  all.forEach(function(u){
-    box.innerHTML = '<section class="wsx'+(u.L==='L4'?' lay4':'')+'">'+u.html+'</section>';
-    u.h = box.firstChild.offsetHeight; u.hc = u.h + 20;
-  });
-  document.body.removeChild(meas);
   var pages = [{units:[], h:headH}];
-  all.forEach(function(u){
-    var p = pages[pages.length-1];
+  var newPage = function(){ var p = {units:[], h:0}; pages.push(p); return p; };
+  /* D-134: bài đoạn văn trái, câu hỏi phải không vừa chỗ còn lại: giữ đoạn văn và các câu đầu vừa trang, câu còn lại thành từng câu tiếp sang trang sau */
+  var splitL3 = function(u, room, n){
+    var P = u.parts, k = P.qs.length, part = null;
+    while(k>1){ k--; part = {kind:'whole', L:u.L, html:P.head+'<div class="lay3"><div>'+P.left+'</div><div>'+P.wb+P.qs.slice(0,k).join('')+'</div></div>'}; part.h = measure(part); if(part.h <= room) break; }
+    if(!part || part.h > room) return false;
+    ['ex','idx','first','title','tot','brk','keep'].forEach(function(f){ part[f] = u[f]; });
+    var rest = P.qs.slice(k).map(function(h){ var q = {kind:'q', L:u.L, split:true, html:h, ex:u.ex, idx:u.idx, first:false, title:u.title}; q.h = measure(q); return q; });
+    all.splice.apply(all, [n, 1, part].concat(rest)); return true;
+  };
+  for(var n=0; n<all.length; n++){
+    var u = all[n], p = pages[pages.length-1];
+    if(u.first && p.units.length){
+      var room = LIMIT - p.h - 20;
+      if(u.brk || (u.keep && u.tot <= LIMIT-20 && u.tot > room)) p = newPage();
+      else if(u.kind==='head'){ // tiêu đề và hướng dẫn không đứng một mình cuối trang: kéo theo tối đa 2 câu
+        var need = u.h, m = 1; while(m<=2 && all[n+m] && !all[n+m].first){ need += all[n+m].h; m++; }
+        if(need > room) p = newPage();
+      }
+    }
+    if(u.first && u.parts && p.h + u.h + 20 > LIMIT){
+      if(!(u.keep && u.tot <= LIMIT-20) && splitL3(u, LIMIT - p.h - 20, n)) u = all[n];
+      else if(p.units.length){ p = newPage(); if(u.h + 20 > LIMIT && splitL3(u, LIMIT-20, n)) u = all[n]; }
+      else if(splitL3(u, LIMIT - p.h - 20, n)) u = all[n];
+      else if(pages.length===1 && splitL3(u, LIMIT-20, n)){ p = newPage(); u = all[n]; } // đoạn văn quá dài so với chỗ dưới đầu phiếu
+    }
     var newSec = !p.units.length || p.units[p.units.length-1].ex!==u.ex;
     var add = u.h + (newSec?20:0) + (newSec && !u.first ? 18 : 0);
-    if(p.h + add > LIMIT && p.units.length){ p = {units:[], h:0}; pages.push(p); newSec = true; add = u.h + 20 + (!u.first?18:0); }
+    if(p.h + add > LIMIT && p.units.length){ p = newPage(); newSec = true; add = u.h + 20 + (!u.first?18:0); }
     p.units.push(u); p.h += add; if(p.h > LIMIT) p.tall = true;
-  });
+  }
+  document.body.removeChild(meas);
   return pages;
 };
 /* Chia trang có tự thu gọn (D-87): phiếu dài hơn số trang mục tiêu thì bài dài một cột chuyển sang hai cột */
@@ -298,7 +323,8 @@ WSV.pageHTML = function(d, page, pi, total, opts){
   var cur = null;
   page.units.forEach(function(u){
     if(!cur || cur.ex!==u.ex){ if(cur) h += '</section>'; cur = u;
-      h += '<section class="wsx'+(u.L==='L4'?' lay4':'')+(opts.cur===u.ex?' cur':'')+'" data-ex="'+esc(u.ex)+'">'+(u.first?'':'<div class="wsx-cont">Bài '+(u.idx+1)+' (tiếp) · '+esc(u.title)+'</div>'); }
+      h += '<section class="wsx'+(u.L==='L4'?' lay4':'')+(opts.cur===u.ex?' cur':'')+'" data-ex="'+esc(u.ex)+'">'+(u.first?'':'<div class="wsx-cont">Bài '+(u.idx+1)+' (tiếp) · '+esc(u.title)+(u.split?' · đoạn văn ở trang trước':'')+'</div>')+
+        (opts.mini && u.first && u.idx>0 ? '<button class="brk-hook" data-act="brk" data-ex="'+esc(u.ex)+'" title="'+(u.brk?'Bỏ ngắt trang trước bài này':'Bắt đầu bài này ở trang mới')+'">'+(u.brk?'✕ Bỏ ngắt trang':'⤓ Ngắt trang ở đây')+'</button>' : ''); }
     h += u.html;
   });
   if(cur) h += '</section>';
@@ -850,6 +876,7 @@ WSV.mount = function(root, data, opts){
       case 'focus': focusEx(b.closest('.wsx').dataset.ex); break;
       case 'note': notePop(b, b.closest('.wsx').dataset.ex); break;
       case 'edit': if(opts.onEdit) opts.onEdit(b.dataset.ex); break;
+      case 'brk': if(opts.onBreak) opts.onBreak(b.dataset.ex); break;
       case 'img': { var m=findMedia(b.dataset.media); if(m) lightbox(m); break; }
       case 'audio': { var m2=findMedia(b.dataset.media); if(m2) playAudio(m2); break; }
       case 'video': { var m3=findMedia(b.dataset.media); if(m3) playVideo(m3); break; }

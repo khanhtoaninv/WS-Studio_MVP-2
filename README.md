@@ -4,7 +4,7 @@ Soạn, kiểm tra tiêu chuẩn, duyệt và xuất phiếu bài tập. Giao di
 
 Đặc tả: [`docs/ws-studio-mvp-spec.md`](docs/ws-studio-mvp-spec.md).
 
-Bản v2 giữ nguyên chức năng của prototype (nay là 267 kiểm tra t1–t8, đều đạt) nhưng đổi cấu trúc để:
+Bản v2 giữ nguyên chức năng của prototype (nay là 281 kiểm tra t1–t9, đều đạt) nhưng đổi cấu trúc để:
 
 1. **Clone về là chạy được với Claude API thật**: sinh bài, tự sửa theo bộ kiểm tra, tạo lại câu và bài.
 2. **Sẵn sàng chuyển sang React**: chỉ thư mục `src/ui/` phải viết lại; lõi, store và dịch vụ dùng lại nguyên.
@@ -31,7 +31,7 @@ npm run dev                 # http://localhost:5173, sửa mã là thấy ngay
 | `npm run dev` | Máy chủ nhỏ + Vite, tự khởi động lại khi mã máy chủ đổi. Có khóa thì AI là Claude, không có thì AI giả lập |
 | `npm run build` | Dựng `dist/ws-studio.html`: một tệp tự đủ, bấm đúp mở bằng `file://`, luôn chạy AI giả lập. `dist/` được đưa lên git để `chay.bat` chạy ngay không cần dựng, nên nhớ dựng lại trước khi commit |
 | `npm start` | Dựng rồi chạy bản dựng qua máy chủ (có Claude) |
-| `npm test` | Dựng rồi chạy 267 kiểm tra t1–t8 (cần `pip install playwright` và Chromium; đặt `WS_CHROME` nếu dùng trình duyệt riêng) |
+| `npm test` | Dựng rồi chạy 281 kiểm tra t1–t9 (cần `pip install playwright` và Chromium; đặt `WS_CHROME` nếu dùng trình duyệt riêng) |
 | `npm run test:server` | Kiểm thử máy chủ, dịch vụ Claude (với Claude API giả, không tốn tiền) và Làm bài trên lớp |
 
 Nguồn AI đang dùng hiện ở **Cài đặt → Nguồn AI**. Khi Claude lỗi (mạng, hết hạn mức, từ chối), lệnh đó tự chạy bằng AI giả lập và app báo bằng thông báo đỏ.

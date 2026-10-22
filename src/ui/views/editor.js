@@ -164,7 +164,7 @@ function tocHTML(c){
     const media = (ex.draft.media||[]).map(id=>Q.media(id)).filter(Boolean);
     const notes = R.wsNotes(ws).filter(n=>n.exId===ex.id && n.status==='open' && n.kind==='request').length;
     h += `<div class="toc-item ${sel?'sel':''}" data-a="tocOpen" data-it="${it.id}" role="button" tabindex="0" aria-label="Mở bài ${i+1}: ${esc(ex.draft.title)}">
-      <span class="num">${i+1}</span>
+      <span class="num">${i+1}${it.breakBefore&&i?'<span class="toc-brk" title="Bắt đầu trang mới" aria-label="Bắt đầu trang mới">⤓</span>':''}</span>
       <div style="min-width:0"><div class="ttl">${esc(ex.draft.title)} ${lockedOther?'<span title="Bài bị khóa">🔒</span>':''}</div>
         <div class="sub">${esc(WS.TYPES[ex.type].label)} · ${ex.draft.questions.length} câu · ${UI.chip(stt.label, stt.chip, stt.icon)} ${v.errors.length?`<span class="mini err">${v.errors.length} lỗi</span>`:''} ${v.warnings.length?`<span class="mini warn">${v.warnings.length} cảnh báo</span>`:''} ${notes?`<span class="mini" style="background:var(--orange-soft);color:var(--orange)">${notes} note</span>`:''} ${mismatch(ws,ex)?'<span class="mini warn">Khác cấu hình hiện tại</span>':''}</div>
         ${sel?`<div class="small muted" style="margin-top:6px;font-style:italic">${esc(ex.draft.instruction)}</div><div class="small" style="margin-top:4px;font-family:var(--serif)">${ex.draft.questions.slice(0,2).map(q=>esc(V.textsOf({questions:[q]},ex.type).map(t=>t.text)[0]||'')).join('<br>')}</div>
@@ -218,6 +218,7 @@ function exPaneHTML(c){
     <div class="ex-nav">${ws?`${UI.btn('← Mục lục',{a:'tocBack', size:'sm', kind:'ghost'})}${UI.btn('◀',{a:'exNav', size:'sm', kind:'ghost', data:{d:-1}, aria:'Bài trước', disabled:idx===0, reason:'Đã là bài đầu'})}<span class="small muted">Bài ${idx+1}/${n}</span>${UI.btn('▶',{a:'exNav', size:'sm', kind:'ghost', data:{d:1}, aria:'Bài sau', disabled:idx===n-1, reason:'Đã là bài cuối'})}`:''}<span class="spacer"></span><span class="layout-pick" role="radiogroup" aria-label="Bố cục hiển thị">${['L1','L2','L3','L4'].map(L=>`<button class="lay ${d.layout===L?'on':''}" ${ro?'disabled':''} data-a="exLay" data-l="${L}" role="radio" aria-checked="${d.layout===L}" title="${esc(Q.layout(L).name)}: ${esc(Q.layout(L).when)}">${UI.layIcon(L)}${L}</button>`).join('')}</span></div>
     <input class="ex-title" value="${esc(d.title)}" data-c="exTitle" data-fk="ex-title" aria-label="Tiêu đề bài" ${ro?'readonly':''}>
     <div class="ex-sub">${UI.typeChip(ex.type)}<span>${std.id} v${std.version}</span>${UI.chip(st.label, st.chip, st.icon)}<span>${d.questions.length} câu</span>${v.pass?'<span style="color:var(--ok-2)">✓ Đạt kiểm tra</span>':`<span style="color:var(--err)">${v.errors.length} lỗi</span>`} · <span>${v.warnings.length} cảnh báo</span></div>
+    ${ws&&item?pageCtlHTML(item, ex, idx, ro):''}
     ${ro?'':`<div class="ex-actions"><span class="btn-wrap">${UI.btn(st.key==='done'?`✓ Done v${R.lastDone(ex).no}`:'Done',{a:'exDone', kind:'ok', disabled:!done.ok, reason:done.reason, title:'Ctrl+Enter'})}${!done.ok&&!done.already?`<span class="why">${esc(done.reason)}</span>`:''}</span>
       ${UI.btn('↻ Tạo lại bài',{a:'exRegen', size:'sm'})}${ex.type!=='cloze_mcq'?UI.btn('＋ Thêm câu',{a:'qAdd', size:'sm', title:'Alt+N'}):''}${ex.type!=='cloze_mcq'?UI.btn('Dán danh sách',{a:'qPaste', size:'sm'}):''}
       ${UI.btn('↶',{a:'exUndo', size:'sm', kind:'ghost', aria:'Hoàn tác', title:'Hoàn tác (Ctrl+Z)', disabled:!(S.session.undo[ex.id]||[]).length, reason:'Chưa có thao tác để hoàn tác'})}${UI.btn('↷',{a:'exRedo', size:'sm', kind:'ghost', aria:'Làm lại', title:'Làm lại (Ctrl+Y)', disabled:!(S.session.redo[ex.id]||[]).length, reason:'Chưa có thao tác để làm lại'})}
@@ -235,6 +236,14 @@ function exPaneHTML(c){
       ${d.questions.map((q,i)=>`<div class="row" style="margin-bottom:4px"><span class="small muted" style="width:46px">Câu ${ex.type==='cloze_mcq'?q.n:i+1}</span><input class="inp" data-c="qField" data-q="${q.id}" data-f="explanation" data-fk="${q.id}:explanation" value="${esc(q.explanation||'')}" placeholder="Giải thích (không bắt buộc)" ${ro?'readonly':''}></div>`).join('')}</details>
     ${(ex.genLog||[]).length?`<details class="sec"><summary class="sec-h" style="cursor:pointer">Nhật ký sinh</summary><div class="small muted">${ex.genLog.map(esc).join('<br>')}</div></details>`:''}
   </div>`;
+}
+/* D-134: ngắt trang và giữ trọn bài là thuộc tính của bài trong phiếu, không đổi nội dung bài */
+function pageCtlHTML(item, ex, idx, ro){
+  const keep = window.WSV.keepOf({type:ex.type, keep:item.keep});
+  return `<div class="ex-page" role="group" aria-label="Dàn trang"><span class="small muted">Dàn trang:</span>
+    ${idx>0?`<button class="tog ${item.breakBefore?'on':''}" data-a="itBrk" data-it="${item.id}" aria-pressed="${!!item.breakBefore}" ${ro?'disabled':''} title="Bài này luôn bắt đầu ở đầu trang">⤓ Bắt đầu trang mới</button>`:''}
+    <button class="tog ${keep?'on':''}" data-a="itKeep" data-it="${item.id}" aria-pressed="${keep}" ${ro?'disabled':''} title="Không tách bài sang hai trang; không vừa phần còn lại thì đẩy cả bài sang trang sau">▣ Giữ trọn bài trên một trang</button>
+    <span class="small muted">${item.keep==null?(keep?'Tự bật vì bài có đoạn văn hoặc là bài nối.':'Tự động: bài dài được tách theo câu.'):'Bạn đã chỉnh.'}</span></div>`;
 }
 function mediaCard(m, ro){
   const thumb = m.kind==='image' ? (S.state.demo.mediaFail && !m.retried ? `<div class="small" style="color:var(--err);text-align:center">Không tải được ảnh<br>${UI.btn('Thử lại',{a:'mediaRetry', size:'xs', data:{m:m.id}})}</div>` : WSV.svgImage(m)) : m.kind==='audio' ? `<div style="font-size:30px">🔊</div>` : `<div style="font-size:30px">🎬</div>`;
@@ -319,7 +328,8 @@ function updatePreview(c, force){
     host.__sig = sig;
     const scrollEl = document.getElementById('ed-right'); const top = scrollEl.scrollTop;
     const tmp = document.createElement('div'); tmp.style.cssText='position:absolute;visibility:hidden;left:0;right:0;top:0'; host.parentNode.appendChild(tmp);
-    const api = WSV.mount(tmp, data, {mini:true, cur:null, scrollEl, onEdit:id=>{ const it=ws&&ws.items.find(i=>i.exerciseId===id); if(it){ E().sel=it.id; E().lastSel=it.id; E().editQ=null; E().selQ=[]; WS.App.render(); } }, onPages:p=>{ const old=E().pageInfo; E().pageInfo=p; if(!old||old.pages!==p.pages||old.target!==p.target){ const pb=document.getElementById('ed-pbar'); if(pb) pb.innerHTML=prevBarHTML(ctx()); } }});
+    const api = WSV.mount(tmp, data, {mini:true, cur:null, scrollEl, onEdit:id=>{ const it=ws&&ws.items.find(i=>i.exerciseId===id); if(it){ E().sel=it.id; E().lastSel=it.id; E().editQ=null; E().selQ=[]; WS.App.render(); } },
+      onBreak:id=>{ const it=ws&&ws.items.find(i=>i.exerciseId===id); if(it) setItem(it.id, 'breakBefore', !it.breakBefore); }, onPages:p=>{ const old=E().pageInfo; E().pageInfo=p; if(!old||old.pages!==p.pages||old.target!==p.target){ const pb=document.getElementById('ed-pbar'); if(pb) pb.innerHTML=prevBarHTML(ctx()); } }});
     if(e.prevAns && e.prevKind==='teacher') api.setAnswers(true);
     if(host.__api) host.__api.destroy();
     host.innerHTML=''; tmp.style.cssText=''; host.appendChild(tmp); host.__api = api;
@@ -379,6 +389,8 @@ const newQuestion = (ex) => {
 const {diffHTML, qText, exText} = UI;
 const LOADING = `<div class="muted" aria-live="polite" style="padding:24px 0">Đang tạo phương án…</div>`;
 
+function setItem(itId, k, v){ const ws=ctx().ws; if(!ws || !A.wsEditGuard(ws)) return; const it=ws.items.find(i=>i.id===itId); if(!it) return;
+  S.commit(()=>{ it[k]=v; WS.audit(k==='breakBefore'?(v?'Ngắt trang trước bài':'Bỏ ngắt trang trước bài'):(v?'Giữ trọn bài trên một trang':'Cho phép tách bài sang trang sau'),'worksheet',ws.id); }); }
 /* ---------- actions ---------- */
 const rer = () => WS.App.render();
 Object.assign(WS.ACT, {
@@ -422,6 +434,8 @@ Object.assign(WS.ACT, {
   exExtra: el => edit(d=>{ d.extraRight=splitList(el.value, ','); }, 'Sửa mục nhiễu'),
   exExplOn: el => edit(d=>{ d.explanationsOn=el.checked; }, 'Bật/tắt giải thích'),
   exLay: el => { const c=ctx(); edit(d=>{ d.layout=el.dataset.l; }, 'Đổi bố cục '+el.dataset.l); },
+  itBrk: el => { const it=ctx().ws.items.find(i=>i.id===el.dataset.it); setItem(it.id, 'breakBefore', !it.breakBefore); },
+  itKeep: el => { const c=ctx(); const it=c.ws.items.find(i=>i.id===el.dataset.it); setItem(it.id, 'keep', !window.WSV.keepOf({type:Q.ex(it.exerciseId).type, keep:it.keep})); },
   exLayKeep: () => { const e=E(); e.dismissLay=e.dismissLay||{}; e.dismissLay[ctx().ex.id]=true; rer(); },
   exDone: () => { const c=ctx(); A.done(c.ex.id, c.ws&&c.ws.id); },
   exUndo: () => { const c=ctx(); A.undoEx(c.ex.id, c.ws&&c.ws.id); }, exRedo: () => { const c=ctx(); A.redoEx(c.ex.id, c.ws&&c.ws.id); },

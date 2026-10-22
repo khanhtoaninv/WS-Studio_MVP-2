@@ -18,7 +18,7 @@ const cfgLessons = c => [c.lessonId].concat(c.multi?c.extra.filter(x=>x!==c.less
 /* D-133: số trang đo bằng chính viewer trên phiếu nháp dựng từ khối bài, cùng thước đo với Preview */
 const measureCache = {sig:null, m:null};
 function measurePlan(w){
-  const c = w.cfg; const sig = JSON.stringify([cfgLessons(c), c.themeId, c.pages, c.title, w.blocks.map(b=>[b.type,b.count,b.difficulty,b.layout,b.fromLib,b.note,b.explanations])]);
+  const c = w.cfg; const sig = JSON.stringify([cfgLessons(c), c.themeId, c.pages, c.title, w.blocks.map(b=>[b.type,b.count,b.difficulty,b.layout,b.fromLib,b.note,b.explanations,b.breakBefore,b.keep])]);
   if(measureCache.sig===sig) return measureCache.m;
   const m = window.WSV.measure(WS.EX.sampleData({title:c.title, lessonIds:cfgLessons(c), themeId:c.themeId, pages:c.pages}, w.blocks));
   measureCache.sig = sig; measureCache.m = m; return m;
@@ -178,7 +178,7 @@ function step3(w){
     const type = b.fromLib?Q.ex(b.fromLib).type:b.type; const sug = b.fromLib?{layout:Q.ex(b.fromLib).draft.layout, reason:'Giữ bố cục của bài trong kho.'}:AI.suggestLayout(type, {questions:new Array(b.count).fill(0), passage:['tfng','cloze_mcq','short_answer'].includes(type)?lesson.passages[0]:''}, false);
     return `<div class="block-row" style="grid-template-columns:28px 1.2fr auto 110px"><b class="muted">${i+1}</b><span>${UI.typeChip(type)} <span class="small muted">${b.fromLib?'từ kho':b.count+' câu'}</span><div class="small muted" style="margin-top:3px">Gợi ý ${sug.layout}: ${esc(sug.reason)}${b.layout==='L2'?' Bố cục cột ảnh sẽ được tạo sẵn một ảnh minh họa.':''}</div></span>
       <span class="layout-pick" role="radiogroup" aria-label="Bố cục bài ${i+1}">${['L1','L2','L3','L4'].map(L=>`<button class="lay ${b.layout===L?'on':''}" data-a="wzLay" data-i="${i}" data-l="${L}" role="radio" aria-checked="${b.layout===L}" title="${esc(Q.layout(L).name)}">${UI.layIcon(L)}${L}${sug.layout===L?' ★':''}</button>`).join('')}</span>
-      <span class="small muted" style="text-align:right">≈ ${(est[i]/L).toFixed(2)} trang${m.items[i]&&m.items[i].pages.length?`<br>trang ${m.items[i].pages.map(p=>p+1).join('–')}`:''}</span></div>`;
+      <span class="small muted" style="text-align:right">${i?`<label class="small" title="Bài này bắt đầu ở trang mới (D-134)"><input type="checkbox" data-c="wzBrk" data-i="${i}" ${b.breakBefore?'checked':''}> Trang mới</label><br>`:''}≈ ${(est[i]/L).toFixed(2)} trang${m.items[i]&&m.items[i].pages.length?`<br>trang ${m.items[i].pages.map(p=>p+1).join('–')}`:''}</span></div>`;
   }).join('');
   const stds = [...new Set(w.blocks.map(b=>{ const t=b.fromLib?Q.ex(b.fromLib).type:b.type; const s=Q.standard(t); return `${s.id} v${s.version}`; }))];
   const th = w.cfg.themeId && Q.theme(w.cfg.themeId);
@@ -215,7 +215,7 @@ WS.runGeneration = async (wsId, blocks, cfg) => {
   for(let i=0;i<blocks.length;i++){
     const b = blocks[i], st = run.blocks[i]; st.status='run'; S.emit();
     const setStep = (k, v) => { st.steps[k]=v; S.emit(); };
-    if(b.fromLib){ for(let k=0;k<7;k++) st.steps[k]='ok'; st.status='ok'; st.log.push('Ghim bài từ kho (không sinh lại).'); S.commit(()=>{ const ex=Q.ex(b.fromLib); ws.items.push({id:U.uid('it'), exerciseId:ex.id, pinnedVersionNo:R.lastDone(ex).no, local:false, layout:null}); }); continue; }
+    if(b.fromLib){ for(let k=0;k<7;k++) st.steps[k]='ok'; st.status='ok'; st.log.push('Ghim bài từ kho (không sinh lại).'); S.commit(()=>{ const ex=Q.ex(b.fromLib); ws.items.push({id:U.uid('it'), exerciseId:ex.id, pinnedVersionNo:R.lastDone(ex).no, local:false, layout:null, breakBefore:!!b.breakBefore}); }); continue; }
     const lessonId = lessons[i % lessons.length];
     for(let k=0;k<5;k++){ setStep(k,'run'); await wait(); setStep(k,'ok'); }
     const gen = await WS.services.ai.generate(lessonId, b.type, {count:b.count, difficulty:b.difficulty, seed:wsId+'|'+i+'|'+Date.now(), themeId:cfg.themeId, layout:b.layout, note:b.note, explanations:b.explanations, blockIndex:i, focus:lessonId===cfg.lessonId?AI.blockFocus(Q.lesson(lessonId), b):[]});
@@ -242,7 +242,7 @@ WS.runGeneration = async (wsId, blocks, cfg) => {
     } else { setStep(5,'ok'); st.steps[6]=''; st.status='ok'; }
     S.commit(()=>{
       if(b.layout==='L2'){ const kw=(lesson.imageKeywords||[lesson.topic])[0]; const opts=AI.imageOptions(kw, lesson.vocab.map(v=>v.emoji).filter(Boolean), i); const m=opts[0]; S.state.media.push(m); ex.draft.media.push(m.id); st.log.push('Đã tạo sẵn 1 ảnh minh họa cho bố cục cột ảnh.'); }
-      ws.items.push({id:U.uid('it'), exerciseId:ex.id, pinnedVersionNo:null, local:false, layout:null});
+      ws.items.push({id:U.uid('it'), exerciseId:ex.id, pinnedVersionNo:null, local:false, layout:null, breakBefore:!!b.breakBefore});
       WS.audit(fault!=='off'?`Sinh bài (ép lỗi: ${fault})`:'Sinh bài (AI giả lập)','exercise',ex.id,{note:st.log.join(' ')});
     });
   }
@@ -280,6 +280,7 @@ Object.assign(WS.ACT, {
   wzB: el => { const w=wiz(), b=w.blocks[+el.dataset.i], k=el.dataset.k; b[k] = el.type==='checkbox'?el.checked : k==='count'?(+el.value||0) : el.value; if(k==='type'){ b.count=Math.max(Q.standard(b.value||b.type).minQ, Math.min(b.count, Q.standard(b.type).maxQ)); b.reason='Khối do bạn chỉnh.'; b.layout=S.state.layoutDefaults[b.type]||'L1'; delete b.objectives; } w.manual=true; rer(); },
   wzMv: el => { const w=wiz(), i=+el.dataset.i, j=i+(+el.dataset.d); if(j<0||j>=w.blocks.length) return; [w.blocks[i],w.blocks[j]]=[w.blocks[j],w.blocks[i]]; w.manual=true; rer(); },
   wzDel: el => { const w=wiz(); w.blocks.splice(+el.dataset.i,1); w.manual=true; rer(); },
+  wzBrk: el => { wiz().blocks[+el.dataset.i].breakBefore = el.checked; rer(); },
   wzLay: el => { const b=wiz().blocks[+el.dataset.i]; b.layout=el.dataset.l; rer(); },
   wzSugg: el => { const w=wiz(); const k=el.dataset.k, i=el.dataset.i===''?null:+el.dataset.i; if(k==='l4') w.blocks[i].layout='L4'; if(k==='less') w.blocks[i].count--; if(k==='pages') w.cfg.pages=measurePlan(w).pages; rer(); UI.toast('Đã áp dụng gợi ý.'); },
   wzFromLib: () => { const w=wiz(); const list = S.state.exercises.filter(e=>e.status==='active' && R.lastDone(e) && e.scope.unitId===w.cfg.unitId);
