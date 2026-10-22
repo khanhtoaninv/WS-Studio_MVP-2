@@ -40,4 +40,43 @@ r.p.locator(f'#ed-prev .wsx[data-ex="{it1["exerciseId"]}"] .brk-hook').evaluate(
 r.check(r.js("!WS.Q.ws('ws3').items[1].breakBefore"), 'Bấm Bỏ ngắt trang trong Preview gỡ ngắt trang')
 r.check(r.js("JSON.stringify(WS.EX.viewerData(WS.Q.ws('ws3'),'student').items.map(i=>i.breakBefore))").startswith('['), 'Tệp xuất mang theo thuộc tính ngắt trang')
 r.shot('t9_editor')
+
+print('Bố cục L5, L6 và mẫu phiếu (D-135)')
+r.open('#/')
+lay = r.js("""(()=>{ const ids=WS.S.state.layouts.map(l=>l.id).join(','); const forMcq=WS.Q.layoutsFor('mcq').map(l=>l.id).join(','); const forOrd=WS.Q.layoutsFor('ordering').map(l=>l.id).join(',');
+  const old={layouts:WS.S.state.layouts.slice(0,4).map(l=>({...l}))}; WS.S.upgrade(old); return {ids, forMcq, forOrd, up:old.layouts.map(l=>l.id).join(','), tpl:Array.isArray(old.wsTemplates)}; })()""")
+r.check(lay['ids']=='L1,L2,L3,L4,L5,L6' and 'L6' in lay['forMcq'] and 'L6' not in lay['forOrd'], 'Thư viện có L5 Ảnh trên câu dưới, L6 Lưới thẻ; L6 chỉ hiện cho loại bài hợp')
+r.check(lay['up']=='L1,L2,L3,L4,L5,L6' and lay['tpl'], 'Dữ liệu đã lưu trước đây được bổ sung L5, L6 và kho mẫu mà không mất dữ liệu')
+v = r.js("""(()=>{ const ws=WS.Q.ws('ws8'); const d=WS.EX.viewerData(ws,'teacher'); const img=d.items.find(i=>(i.media||[]).some(m=>m.kind==='image')); const mcq=d.items.find(i=>i.type==='mcq'); const ord=d.items.find(i=>i.type==='ordering');
+  img.layout='L5'; mcq.layout='L6'; if(ord) ord.layout='L6'; const h=it=>WSV.blockUnits(it,0,{teacher:true}).units.map(u=>u.html).join('');
+  const g=h(mcq); const rows=WSV.blockUnits(mcq,0,{teacher:true}).units.filter(u=>u.kind==='q');
+  return {l5:h(img).includes('lay5') && h(img).includes('mimg'), l6:g.includes('lay6'), per:rows.every(u=>(u.html.match(/data-q=/g)||[]).length<=3), ordL1: ord ? WSV.effLayout(ord)==='L1' : true}; })()""")
+r.check(v['l5'] and v['l6'] and v['per'] and v['ordL1'], 'Viewer: L5 đặt ảnh lớn đầu bài, L6 xếp câu thành thẻ 3 cột, loại bài không hợp thì về một cột')
+# Lưu mẫu ở bước Khối bài
+r.open('#/soan?ls=ex1-l1-u1-1'); r.p.wait_for_timeout(200)
+r.p.click('[data-a="wzNext"]'); r.p.wait_for_timeout(300)
+n0 = r.js("WS.S.session.ui.wiz.blocks.length")
+r.p.click('[data-a="wzTplSave"]'); r.p.wait_for_timeout(150)
+r.p.fill('#tpl-n', 'Mẫu ôn tập 2 trang'); r.p.click('.modal-f .btn.primary'); r.p.wait_for_timeout(200)
+tp = r.js("WS.S.state.wsTemplates")
+r.check(len(tp)==1 and tp[0]['name']=='Mẫu ôn tập 2 trang' and len(tp[0]['blocks'])==n0 and tp[0]['pages']==2 and 'lessonId' not in tp[0], 'Lưu làm mẫu: giữ khối và số trang, không gắn lesson')
+# Dùng mẫu ở lesson khác, loại bài thiếu dữ liệu được đổi
+r.js("""WS.S.state.wsTemplates.push({id:'tplx', name:'Mẫu có biến đổi từ', ownerId:'minh', shared:false, pages:3, createdAt:Date.now(),
+  blocks:[{type:'matching',count:6,difficulty:'easy',layout:'L6'},{type:'word_form',count:4,difficulty:'medium',layout:'L4',breakBefore:true},{type:'mcq',count:30,difficulty:'medium',layout:'L1'}]})""")
+r.check(r.js("WS.S.session.ui.wiz && (()=>{ const v=(WS.S.state.wsTemplates||[]).filter(t=>t.ownerId===WS.Q.me().id||t.shared); return v.length; })()")==1, 'Mẫu riêng của người khác không hiện cho mình')
+notes = r.js("WS.applyTemplate(WS.S.session.ui.wiz, WS.S.state.wsTemplates.find(t=>t.id==='tplx'))")
+bl = r.js("WS.S.session.ui.wiz.blocks.map(b=>({t:b.type,c:b.count,l:b.layout,br:b.breakBefore}))")
+r.check(bl[0]['t']=='matching' and bl[0]['l']=='L6' and bl[1]['t']!='word_form' and bl[1]['br'] and any('Biến đổi từ' in x for x in notes), f"Dùng mẫu: loại bài lesson không sinh được đổi sang loại cùng kỹ năng ({bl[1]['t']}), giữ bố cục và ngắt trang")
+r.check(bl[2]['c'] <= r.js("WS.Q.standard('mcq').maxQ") and r.js("WS.S.session.ui.wiz.cfg.pages")==3, 'Dùng mẫu: số câu kẹp theo tiêu chuẩn và dữ liệu lesson, lấy số trang của mẫu')
+r.p.click('[data-a="wzTplUse"]'); r.p.wait_for_timeout(150)
+r.check(r.p.locator('.modal [data-pick]').count()==1 and 'Mẫu ôn tập 2 trang' in r.text('.modal'), 'Hộp Dùng mẫu liệt kê mẫu của mình')
+r.p.click('.modal [data-pick]'); r.p.wait_for_timeout(200)
+r.check(r.js("WS.S.session.ui.wiz.blocks.length")==n0 and 'Đã dùng mẫu' in r.text('body'), 'Bấm Dùng: thay khối bằng khối của mẫu')
+# Admin đưa mẫu thành dùng chung
+r.user('thu'); r.go('#/cau-hinh?tab=layouts'); r.p.wait_for_timeout(250)
+r.check('Mẫu phiếu' in r.text() and 'Mẫu có biến đổi từ' in r.text() and 'L6 · Lưới thẻ' in r.text(), 'Cấu hình hệ thống liệt kê L5, L6 và mẫu phiếu')
+r.p.locator('[data-c="admTplShare"][data-id="tplx"]').check(); r.p.wait_for_timeout(200)
+r.user('lan')
+r.check(r.js("WS.S.state.wsTemplates.find(t=>t.id==='tplx').shared") and r.js("WS.S.state.wsTemplates.filter(t=>t.ownerId===WS.Q.me().id||t.shared).length")==2, 'Admin bật Dùng chung: người soạn khác thấy mẫu')
+r.shot('t9_admin')
 r.done()

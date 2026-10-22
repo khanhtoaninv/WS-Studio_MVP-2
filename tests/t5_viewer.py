@@ -1,3 +1,4 @@
+import re
 from harness import Run, SHOTS
 import pathlib, re, json
 r = Run()
@@ -24,7 +25,7 @@ leak = [k for k in ['"correctId"','"accepted"','"answer"','"correctIdx"','"expla
 r.check(not leak, f'Bản học sinh không có dữ liệu đáp án trong mã nguồn {leak}')
 r.check('"correctId"' in te and '"accepted"' in te, 'Bản giáo viên có dữ liệu đáp án')
 r.check('<meta name="ws-id" content="WS-0008">' in st and 'id="ws-meta"' in st and '<meta name="ws-version" content="1">' in st, 'Metadata mã phiếu, phiên bản trong tệp (D-50)')
-r.check('cdn' not in st.lower() and 'https://' not in st.split('<style>')[0], 'Tệp tự đủ, không tải CDN')
+r.check(not re.search(r'//[\w.-]*cdn|cdn[\w-]*\.(com|net|org|io)|<script[^>]+src=|<link[^>]+href="http', st.lower()) and 'https://' not in st.split('<style>')[0], 'Tệp tự đủ, không tải CDN')
 # answer strings: fill_blank answers of ws8 should not appear outside word bank? check one mcq correct word mapping can't be derived: no "✓" marks
 r.done_main = r.done
 # ---------- open student file offline ----------

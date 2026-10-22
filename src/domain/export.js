@@ -60,7 +60,7 @@ EX.sampleItem = (lessonId, b, i, themeId) => {
   const key = [lessonId, b.type, b.count, b.difficulty, themeId, b.explanations, b.note||''].join('|');
   let d = sampleCache.get(key);
   if(!d){ d = WS.AI.generate(lessonId, b.type, {count:b.count, difficulty:b.difficulty, seed:'sample|'+key, themeId, layout:b.layout, note:b.note, explanations:b.explanations}).draft; sampleCache.set(key, d); }
-  const dd = Object.assign({}, d, {media: b.layout==='L2' ? [{id:'sample-img'+i, kind:'image', keyword:'', emoji:'🖼️', hue:210, style:0, alt:'Illustration', status:'ok'}] : []});
+  const dd = Object.assign({}, d, {media: (b.layout==='L2'||b.layout==='L5') ? [{id:'sample-img'+i, kind:'image', keyword:'', emoji:'🖼️', hue:210, style:0, alt:'Illustration', status:'ok'}] : []});
   return EX.itemView({id:'sample'+i, type:b.type}, dd, i, b.layout||dd.layout||'L1', true);
 };
 EX.sampleData = (c, blocks) => {

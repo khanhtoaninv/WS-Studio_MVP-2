@@ -208,9 +208,11 @@ function passageHTML(it, T){
     p = p.replace(/\{(\d+)\}/g, function(_,n){ var q=qs[n]; return '<span class="gap">'+n+'</span><span class="blank">'+(T&&q&&q.correctIdx!=null?'<span class="ans-in">'+esc(q.options[q.correctIdx])+'</span>':'&nbsp;')+'</span>'; }); }
   return '<div class="psg">'+p+'</div>';
 }
+WSV.L6_TYPES = ['mcq','matching','fill_blank','word_form','tfng'];
 WSV.effLayout = function(it){
   var L = it.layout||'L1'; var hasImg = (it.media||[]).some(function(m){return m.kind==='image';});
-  if(L==='L2' && !hasImg) L = 'L1';
+  if((L==='L2' || L==='L5') && !hasImg) L = 'L1';
+  if(L==='L6' && WSV.L6_TYPES.indexOf(it.type)<0) L = 'L1';
   if(L==='L3' && !it.passage) L = (it.questions||[]).length>=6 ? 'L4':'L1';
   return L;
 };
@@ -226,13 +228,15 @@ WSV.blockUnits = function(it, idx, opts){
   if(it.type==='matching'){
     var right = '<div>'+(it.rightList||[]).map(function(r,k){ return '<div class="mr"><b style="font-family:system-ui,sans-serif;font-size:12.5px">'+LET[k]+'</b> <span class="'+(/^[←-⯿\ud83c-\udbff]/.test(r)||r.length<=3?'em':'')+'">'+esc(r)+'</span></div>'; }).join('')+'</div>';
     var body = '<div class="mt"><div>'+qs.join('')+'</div>'+right+'</div>';
-    if(L==='L2') body = '<div class="lay2"><div>'+body+'</div><div class="side">'+mediaHTML(it,opts,true)+'</div></div>'; else body = mediaHTML(it,opts)+body;
+    if(L==='L6') body = '<div class="lay6">'+qs.join('')+'</div><div class="lay6 right">'+(it.rightList||[]).map(function(r,k){ return '<div class="mr"><b style="font-family:system-ui,sans-serif;font-size:12.5px">'+LET[k]+'</b> <span class="'+(/^[←-⯿\ud83c-\udbff]/.test(r)||r.length<=3?'em':'')+'">'+esc(r)+'</span></div>'; }).join('')+'</div>';
+    if(L==='L5') body = '<div class="lay5">'+mediaHTML(it,opts)+'</div>'+body; else if(L==='L6') body = mediaHTML(it,opts)+body; else if(L==='L2') body = '<div class="lay2"><div>'+body+'</div><div class="side">'+mediaHTML(it,opts,true)+'</div></div>'; else body = mediaHTML(it,opts)+body;
     units.push({kind:'whole', html:head+wb+body}); return {units:units, L:L};
   }
   if(L==='L2'){ units.push({kind:'whole', html:head+'<div class="lay2"><div>'+passageHTML(it,T)+wb+qs.join('')+'</div><div class="side">'+mediaHTML(it,opts,true)+'</div></div>'}); return {units:units,L:L}; }
   if(L==='L3'){ var left = passageHTML(it,T)+mediaHTML(it,opts); units.push({kind:'whole', html:head+'<div class="lay3"><div>'+left+'</div><div>'+wb+qs.join('')+'</div></div>', parts:{head:head, left:left, wb:wb, qs:qs}}); return {units:units,L:L}; }
-  units.push({kind:'head', html:head+mediaHTML(it,opts)+passageHTML(it,T)+wb});
-  if(L==='L4'){ for(var k=0;k<qs.length;k+=2) units.push({kind:'q', html:'<div class="qgrid">'+qs[k]+(qs[k+1]||'')+'</div>'}); }
+  units.push({kind:'head', html:head+(L==='L5'?'<div class="lay5">'+mediaHTML(it,opts)+'</div>':mediaHTML(it,opts))+passageHTML(it,T)+wb});
+  if(L==='L6'){ for(var k6=0;k6<qs.length;k6+=3) units.push({kind:'q', html:'<div class="lay6">'+qs.slice(k6,k6+3).join('')+'</div>'}); }
+  else if(L==='L4'){ for(var k=0;k<qs.length;k+=2) units.push({kind:'q', html:'<div class="qgrid">'+qs[k]+(qs[k+1]||'')+'</div>'}); }
   else qs.forEach(function(h){ units.push({kind:'q', html:h}); });
   return {units:units, L:L};
 };

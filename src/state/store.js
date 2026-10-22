@@ -30,9 +30,16 @@ WS.store = S;
 
 S.memoryFallback = false;
 S.load = () => {
-  try { const st = WS.services.storage.load(KEY); if(st && st.schemaVersion===WS.SCHEMA) return st; }
+  try { const st = WS.services.storage.load(KEY); if(st && st.schemaVersion===WS.SCHEMA) return S.upgrade(st); }
   catch(e){ S.memoryFallback = true; }
   return null;
+};
+/* Bổ sung phần mới vào dữ liệu đã lưu mà không xóa dữ liệu cũ: bố cục L5, L6 (D-135), mẫu phiếu */
+S.upgrade = st => {
+  st.layouts = st.layouts || [];
+  WS.LAYOUTS.forEach(l=>{ const cur = st.layouts.find(x=>x.id===l.id); if(!cur) st.layouts.push(U.clone(l)); else if(l.types && !cur.types) cur.types = l.types.slice(); });
+  st.wsTemplates = st.wsTemplates || [];
+  return st;
 };
 S.persist = () => {
   if(S.state.demo && S.state.demo.netFail){ S.saveError = true; return false; }
@@ -62,6 +69,7 @@ Q.ex = id => S.state.exercises.find(e=>e.id===id);
 Q.ws = id => S.state.worksheets.find(w=>w.id===id);
 Q.media = id => S.state.media.find(m=>m.id===id);
 Q.layout = id => S.state.layouts.find(l=>l.id===id) || S.state.layouts[0];
+Q.layoutsFor = type => S.state.layouts.filter(l=>!l.types || !type || l.types.includes(type));
 
 /* ---------- audit & notifications ---------- */
 WS.audit = (action, targetType, targetId, extra={}) => {

@@ -60,6 +60,30 @@ function coverageCard(w, lesson){
       return `<div class="cov-row ${o.blocks.length?'':'miss'}" data-obj="${o.i}"><b class="muted">${o.i+1}</b><span>${esc(o.t)} <span class="small muted">· ${o.kinds.map(k=>esc(AI.KINDS[k])).join(', ')}</span></span>
         ${o.blocks.length?`<span class="small">${o.blocks.map(j=>'Bài '+(j+1)).join(', ')} · ${n} câu</span>`:`<span class="small cov-miss">Chưa có bài luyện ${UI.btn('＋ Thêm khối cho mục tiêu này',{a:'wzAddObj', size:'xs', data:{o:o.i}})}</span>`}</div>`; }).join('')}</div></div>`;
 }
+/* D-135: mẫu phiếu = danh sách khối (loại, số câu, độ khó, bố cục, ngắt trang, ghi chú) + số trang; không gắn lesson */
+const tplVisible = () => (S.state.wsTemplates||[]).filter(t=>t.ownerId===Q.me().id || t.shared);
+const tplSummary = t => t.blocks.map(b=>`${WS.TYPES[b.type].label} × ${b.count}`).join(' · ');
+function applyTemplate(w, tpl){
+  const lesson = Q.lesson(w.cfg.lessonId); const notes = []; const used = new Set();
+  const blocks = [];
+  tpl.blocks.forEach((tb,i)=>{
+    let t = tb.type;
+    if(!AI.available(lesson,t).ok){
+      const alt = [...new Set(AI.TYPE_KINDS[t].flatMap(k=>AI.KIND_TYPES[k]))].find(x=>x!==t && AI.available(lesson,x).ok && !used.has(x) && !tpl.blocks.some(y=>y.type===x));
+      if(!alt){ notes.push(`bỏ khối ${i+1} (${WS.TYPES[t].label}: lesson thiếu dữ liệu)`); return; }
+      notes.push(`khối ${i+1} ${WS.TYPES[t].label} → ${WS.TYPES[alt].label}`); t = alt;
+    }
+    used.add(t);
+    const std = Q.standard(t), av = AI.available(lesson,t);
+    const count = Math.max(std.minQ, Math.min(tb.count, std.maxQ, av.max));
+    if(count!==tb.count && t===tb.type) notes.push(`khối ${i+1} còn ${count} câu`);
+    const layout = Q.layoutsFor(t).some(l=>l.id===tb.layout) ? tb.layout : (S.state.layoutDefaults[t]||'L1');
+    blocks.push({id:U.uid('b'), type:t, count, difficulty:tb.difficulty, explanations:tb.explanations!==false, note:tb.note||'', layout, breakBefore:!!tb.breakBefore, keep:tb.keep, reason:`Theo mẫu "${tpl.name}".`});
+  });
+  w.blocks = blocks; w.cfg.pages = tpl.pages; w.manual = true; w.tplId = tpl.id;
+  return notes;
+}
+WS.applyTemplate = applyTemplate;
 /* Sơ đồ trang: mỗi trang A4 một ô, các bài xếp theo chiều cao thật */
 function pageMap(m){
   const L = window.WSV.PAGE_LIMIT;
@@ -159,7 +183,7 @@ function step2(w){
   const reason = !w.blocks.length ? 'Phiếu cần ít nhất 1 khối bài.' : bad.length ? 'Còn khối chưa hợp lệ: '+bad[0] : '';
   const unusable = WS.TYPE_ORDER.filter(t=>!AI.available(lesson,t).ok);
   return `<div class="stack">${fillBar(w)}
-    <div class="row"><h3>Khối bài</h3><span class="muted small">${w.manual?'Bạn đã sửa tay; hệ thống không tự dàn lại.':'Hệ thống tự dàn theo số trang. Sửa bất kỳ ô nào để dàn tay.'}</span><span class="spacer"></span>${UI.btn('Xóa hết',{a:'wzClear',size:'sm',kind:'ghost'})}${UI.btn('＋ Thêm từ kho bài',{a:'wzFromLib',size:'sm'})}${UI.btn('＋ Thêm khối',{a:'wzAdd',size:'sm'})}</div>
+    <div class="row"><h3>Khối bài</h3><span class="muted small">${w.manual?'Bạn đã sửa tay; hệ thống không tự dàn lại.':'Hệ thống tự dàn theo số trang. Sửa bất kỳ ô nào để dàn tay.'}</span><span class="spacer"></span>${UI.btn('Xóa hết',{a:'wzClear',size:'sm',kind:'ghost'})}${UI.btn('▤ Dùng mẫu',{a:'wzTplUse',size:'sm',kind:'ghost', title:'Dùng mẫu phiếu đã lưu (D-135)'})}${UI.btn('Lưu làm mẫu',{a:'wzTplSave',size:'sm',kind:'ghost', disabled:!w.blocks.some(b=>!b.fromLib), reason:'Chưa có khối nào để lưu'})}${UI.btn('＋ Thêm từ kho bài',{a:'wzFromLib',size:'sm'})}${UI.btn('＋ Thêm khối',{a:'wzAdd',size:'sm'})}</div>
     <div class="stack">${rows || UI.empty('Chưa có khối nào','Thêm khối hoặc bấm Dàn bộ khác để hệ thống đề xuất.')}</div>
     ${coverageCard(w, lesson)}
     ${unusable.length?`<div class="small muted">Không sinh được ở lesson này: ${unusable.map(t=>`<span data-tip="${esc(AI.available(lesson,t).reason)}" style="border-bottom:1px dotted">${esc(WS.TYPES[t].label)}</span>`).join(', ')}.</div>`:''}
@@ -176,8 +200,8 @@ function step3(w){
   if(over){ w.blocks.forEach((b,i)=>{ if(!b.fromLib && b.layout==='L1' && ['fill_blank','word_form','mcq','tfng'].includes(b.type) && b.count>=4) sugg.push({k:'l4', i, t:`Chuyển Bài ${i+1} (${WS.TYPES[b.type].label}) sang hai cột`}); if(!b.fromLib && b.count>Q.standard(b.type).minQ) sugg.push({k:'less', i, t:`Bớt 1 câu ở Bài ${i+1} (còn ${b.count-1}, tối thiểu ${Q.standard(b.type).minQ})`}); }); sugg.push({k:'pages', t:`Tăng số trang lên ${m.pages}`}); }
   const rows = w.blocks.map((b,i)=>{
     const type = b.fromLib?Q.ex(b.fromLib).type:b.type; const sug = b.fromLib?{layout:Q.ex(b.fromLib).draft.layout, reason:'Giữ bố cục của bài trong kho.'}:AI.suggestLayout(type, {questions:new Array(b.count).fill(0), passage:['tfng','cloze_mcq','short_answer'].includes(type)?lesson.passages[0]:''}, false);
-    return `<div class="block-row" style="grid-template-columns:28px 1.2fr auto 110px"><b class="muted">${i+1}</b><span>${UI.typeChip(type)} <span class="small muted">${b.fromLib?'từ kho':b.count+' câu'}</span><div class="small muted" style="margin-top:3px">Gợi ý ${sug.layout}: ${esc(sug.reason)}${b.layout==='L2'?' Bố cục cột ảnh sẽ được tạo sẵn một ảnh minh họa.':''}</div></span>
-      <span class="layout-pick" role="radiogroup" aria-label="Bố cục bài ${i+1}">${['L1','L2','L3','L4'].map(L=>`<button class="lay ${b.layout===L?'on':''}" data-a="wzLay" data-i="${i}" data-l="${L}" role="radio" aria-checked="${b.layout===L}" title="${esc(Q.layout(L).name)}">${UI.layIcon(L)}${L}${sug.layout===L?' ★':''}</button>`).join('')}</span>
+    return `<div class="block-row" style="grid-template-columns:28px 1.2fr auto 110px"><b class="muted">${i+1}</b><span>${UI.typeChip(type)} <span class="small muted">${b.fromLib?'từ kho':b.count+' câu'}</span><div class="small muted" style="margin-top:3px">Gợi ý ${sug.layout}: ${esc(sug.reason)}${b.layout==='L2'||b.layout==='L5'?' Bố cục có ảnh sẽ được tạo sẵn một ảnh minh họa.':''}</div></span>
+      <span class="layout-pick" role="radiogroup" aria-label="Bố cục bài ${i+1}">${Q.layoutsFor(type).map(l=>l.id).map(L=>`<button class="lay ${b.layout===L?'on':''}" data-a="wzLay" data-i="${i}" data-l="${L}" role="radio" aria-checked="${b.layout===L}" title="${esc(Q.layout(L).name)}">${UI.layIcon(L)}${L}${sug.layout===L?' ★':''}</button>`).join('')}</span>
       <span class="small muted" style="text-align:right">${i?`<label class="small" title="Bài này bắt đầu ở trang mới (D-134)"><input type="checkbox" data-c="wzBrk" data-i="${i}" ${b.breakBefore?'checked':''}> Trang mới</label><br>`:''}≈ ${(est[i]/L).toFixed(2)} trang${m.items[i]&&m.items[i].pages.length?`<br>trang ${m.items[i].pages.map(p=>p+1).join('–')}`:''}</span></div>`;
   }).join('');
   const stds = [...new Set(w.blocks.map(b=>{ const t=b.fromLib?Q.ex(b.fromLib).type:b.type; const s=Q.standard(t); return `${s.id} v${s.version}`; }))];
@@ -241,7 +265,7 @@ WS.runGeneration = async (wsId, blocks, cfg) => {
       else { setStep(6,'ok'); st.status='fixed'; if(v.warnings.length) st.log.push(`Còn ${v.warnings.length} cảnh báo cần xem lại.`); }
     } else { setStep(5,'ok'); st.steps[6]=''; st.status='ok'; }
     S.commit(()=>{
-      if(b.layout==='L2'){ const kw=(lesson.imageKeywords||[lesson.topic])[0]; const opts=AI.imageOptions(kw, lesson.vocab.map(v=>v.emoji).filter(Boolean), i); const m=opts[0]; S.state.media.push(m); ex.draft.media.push(m.id); st.log.push('Đã tạo sẵn 1 ảnh minh họa cho bố cục cột ảnh.'); }
+      if(b.layout==='L2' || b.layout==='L5'){ const kw=(lesson.imageKeywords||[lesson.topic])[0]; const opts=AI.imageOptions(kw, lesson.vocab.map(v=>v.emoji).filter(Boolean), i); const m=opts[0]; S.state.media.push(m); ex.draft.media.push(m.id); st.log.push('Đã tạo sẵn 1 ảnh minh họa cho bố cục cột ảnh.'); }
       ws.items.push({id:U.uid('it'), exerciseId:ex.id, pinnedVersionNo:null, local:false, layout:null, breakBefore:!!b.breakBefore});
       WS.audit(fault!=='off'?`Sinh bài (ép lỗi: ${fault})`:'Sinh bài (AI giả lập)','exercise',ex.id,{note:st.log.join(' ')});
     });
@@ -280,6 +304,21 @@ Object.assign(WS.ACT, {
   wzB: el => { const w=wiz(), b=w.blocks[+el.dataset.i], k=el.dataset.k; b[k] = el.type==='checkbox'?el.checked : k==='count'?(+el.value||0) : el.value; if(k==='type'){ b.count=Math.max(Q.standard(b.value||b.type).minQ, Math.min(b.count, Q.standard(b.type).maxQ)); b.reason='Khối do bạn chỉnh.'; b.layout=S.state.layoutDefaults[b.type]||'L1'; delete b.objectives; } w.manual=true; rer(); },
   wzMv: el => { const w=wiz(), i=+el.dataset.i, j=i+(+el.dataset.d); if(j<0||j>=w.blocks.length) return; [w.blocks[i],w.blocks[j]]=[w.blocks[j],w.blocks[i]]; w.manual=true; rer(); },
   wzDel: el => { const w=wiz(); w.blocks.splice(+el.dataset.i,1); w.manual=true; rer(); },
+  wzTplSave: () => { const w=wiz(); const blocks = w.blocks.filter(b=>!b.fromLib);
+    UI.modal({title:'Lưu làm mẫu phiếu', sub:'Mẫu giữ loại bài, số câu, độ khó, bố cục, ngắt trang và ghi chú cho AI của từng khối, cùng số trang. Mẫu không gắn với lesson nên dùng lại được cho lesson khác.'+(blocks.length<w.blocks.length?' Khối thêm từ kho bài không được lưu vào mẫu.':''),
+      body:`<div class="field"><label for="tpl-n">Tên mẫu</label><input id="tpl-n" class="inp" value="${esc(`Mẫu ${w.cfg.pages} trang · ${blocks.length} khối`)}"></div>`,
+      buttons:[{label:'Hủy', kind:'ghost'}, {label:'Lưu mẫu', kind:'primary', onClick:(m,close)=>{ const name=(m.querySelector('#tpl-n').value||'').trim()||'Mẫu phiếu';
+        S.commit(st=>{ st.wsTemplates = st.wsTemplates||[]; st.wsTemplates.push({id:U.uid('tpl'), name, ownerId:Q.me().id, shared:false, pages:w.cfg.pages, createdAt:Date.now(),
+          blocks:blocks.map(b=>({type:b.type, count:b.count, difficulty:b.difficulty, layout:b.layout, explanations:b.explanations!==false, note:b.note||'', breakBefore:!!b.breakBefore, keep:b.keep}))});
+          WS.audit('Lưu mẫu phiếu','system','',{note:name}); });
+        close(); UI.toast(`Đã lưu mẫu "${name}".`); }}]}); },
+  wzTplUse: () => { const w=wiz(); const list=tplVisible();
+    UI.modal({title:'Dùng mẫu phiếu', sub:'Thay danh sách khối hiện tại bằng khối của mẫu. Loại bài lesson này không sinh được sẽ được đổi sang loại cùng kỹ năng.', wide:true,
+      body: list.length?`<div class="tbl-wrap"><table class="tbl"><tbody>${list.map(t=>`<tr><td><b>${esc(t.name)}</b> ${t.shared?UI.chip('Dùng chung','blue'):''}<div class="small muted">${t.pages} trang · ${esc(tplSummary(t))} · ${esc(Q.user(t.ownerId).name)}</div></td><td style="white-space:nowrap">${t.ownerId===Q.me().id?`<button class="btn sm ghost" data-del="${t.id}">Xóa</button> `:''}<button class="btn sm" data-pick="${t.id}">Dùng</button></td></tr>`).join('')}</tbody></table></div>`:UI.empty('Chưa có mẫu phiếu','Dàn khối xong, bấm "Lưu làm mẫu" để dùng lại cho lesson khác.'),
+      buttons:[{label:'Đóng', kind:'ghost'}],
+      onMount:(m,close)=>m.addEventListener('click',e=>{ const d=e.target.closest('[data-del]'); if(d){ S.commit(st=>{ st.wsTemplates=st.wsTemplates.filter(t=>t.id!==d.dataset.del); }); d.closest('tr').remove(); UI.toast('Đã xóa mẫu.'); return; }
+        const b=e.target.closest('[data-pick]'); if(!b) return; const tpl=list.find(t=>t.id===b.dataset.pick); const notes=applyTemplate(w, tpl); close(); rer();
+        UI.toast(`Đã dùng mẫu "${tpl.name}"${notes.length?'; điều chỉnh theo lesson: '+notes.join(', '):''}.`); })}); },
   wzBrk: el => { wiz().blocks[+el.dataset.i].breakBefore = el.checked; rer(); },
   wzLay: el => { const b=wiz().blocks[+el.dataset.i]; b.layout=el.dataset.l; rer(); },
   wzSugg: el => { const w=wiz(); const k=el.dataset.k, i=el.dataset.i===''?null:+el.dataset.i; if(k==='l4') w.blocks[i].layout='L4'; if(k==='less') w.blocks[i].count--; if(k==='pages') w.cfg.pages=measurePlan(w).pages; rer(); UI.toast('Đã áp dụng gợi ý.'); },

@@ -14,7 +14,7 @@ WS.emptyState = () => ({
   settings:{selfApprove:false, lockTtl:120, l1Download:false, strictness:'std', latency:'mid', apiUrl:'https://lms.example.edu/api/worksheets', qfb:WS.defaultQfb()},
   currentUserId:'lan', curricula:U.clone(WS.CURRICULA), curriculaRev:0,
   curriculumVersions:Object.fromEntries(WS.CURRICULA.map(c=>[c.id,[{version:c.version, at:Date.now()-86400000*30, by:'thu', note:'Bản gốc', lessons:countLessons(c)}]])),
-  standards:U.clone(WS.STANDARDS), themes:U.clone(WS.THEMES), layouts:U.clone(WS.LAYOUTS), layoutDefaults:U.clone(WS.LAYOUT_DEFAULTS),
+  standards:U.clone(WS.STANDARDS), themes:U.clone(WS.THEMES), layouts:U.clone(WS.LAYOUTS), layoutDefaults:U.clone(WS.LAYOUT_DEFAULTS), wsTemplates:[],
   exercises:[], worksheets:[], media:[], notes:[], notifications:[], audit:[], feedback:[], locks:[],
   demo:{aiFault:'off', netFail:false, mediaFail:false}, lessonFiles:{}, counters:{ws:0}, tour:{hidden:false}
 });

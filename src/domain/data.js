@@ -76,7 +76,9 @@ WS.LAYOUTS = [
   {id:'L1', name:'Một cột', when:'Mọi bài, chạy một mạch từ trên xuống', cols:1},
   {id:'L2', name:'Một cột kèm cột ảnh', when:'Bài có ảnh minh họa', cols:1, image:true},
   {id:'L3', name:'Đoạn văn trái, câu hỏi phải', when:'Bài đọc hiểu dài, nhiều câu', cols:2, passage:true},
-  {id:'L4', name:'Hai cột đều', when:'Bài nhiều câu ngắn (điền từ, nối từ)', cols:2}
+  {id:'L4', name:'Hai cột đều', when:'Bài nhiều câu ngắn (điền từ, nối từ)', cols:2},
+  {id:'L5', name:'Ảnh trên, câu dưới', when:'Bài nhìn tranh: tranh lớn đầu bài, câu hỏi bên dưới', cols:1, image:true},
+  {id:'L6', name:'Lưới thẻ', when:'Câu rất ngắn dạng thẻ: nối tranh với từ, khoanh chọn, đúng/sai', cols:3, types:['mcq','matching','fill_blank','word_form','tfng']}
 ];
 WS.LAYOUT_DEFAULTS = {mcq:'L1', fill_blank:'L4', matching:'L1', ordering:'L1', tfng:'L3', cloze_mcq:'L3', word_form:'L4', rewrite:'L1', short_answer:'L3'};
 
