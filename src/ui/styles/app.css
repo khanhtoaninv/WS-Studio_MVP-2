@@ -433,3 +433,36 @@ textarea.inp{height:auto;padding:8px 10px;resize:vertical;line-height:1.45}
   --oos-bg:#3A2F12; --oos-line:#F3C24C; --ban-bg:#3E1A17; --diff-add:#15352A; --diff-del:#3E1A17; --prev-bar:rgba(17,22,28,.92); --hl-bd:#6B5719;
   color-scheme:dark;
 }
+
+/* ============ LÀM BÀI TRÊN LỚP (D-129) ============ */
+.cls-start{max-width:720px}
+.cls-live{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.cls-live.ended{background:var(--surface-2)}
+.cls-code{display:flex;flex-direction:column}
+.cls-code b{font-size:44px;letter-spacing:6px;line-height:1.1;color:var(--accent)}
+.cls-join{flex:1;min-width:240px;display:flex;flex-direction:column;gap:4px}
+.cls-url{font-size:18px;word-break:break-all}
+.cls-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-top:12px}
+.cls-grid h3{margin:0 0 10px}
+.cls-st tbody tr{cursor:pointer}
+.cls-st tbody tr:hover{background:var(--surface-2)}
+.cls-rank{list-style:none;margin:0 0 8px;padding:0}
+.cls-rank li{display:flex;gap:10px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--line)}
+.cls-rank .rk{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--grey-soft);font-weight:700;font-size:13px}
+.cls-rank .rk1,.cls-rank .rk2,.cls-rank .rk3{background:var(--accent);color:var(--accent-ink)}
+.cls-rank .nm{flex:1}
+.cls-rank .sc{font-weight:700}
+.cls-bars{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-width:900px}
+.cls-bar{display:grid;grid-template-columns:minmax(140px,260px) 1fr 48px 170px;gap:12px;align-items:center;font-size:14px}
+.cls-bar .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cls-bar .tr{height:16px;background:var(--grey-soft);border-radius:4px;overflow:hidden}
+.cls-bar .fl{display:block;height:100%;border-radius:4px}
+.cls-bar .fl.hi{background:var(--bar-ok)}.cls-bar .fl.mid{background:var(--bar-rev)}.cls-bar .fl.lo{background:var(--err)}
+.cls-bar .pc{font-weight:700;text-align:right}
+@media (max-width:700px){.cls-bar{grid-template-columns:1fr 48px}.cls-bar .tr{grid-column:1/-1;grid-row:2}.cls-bar .small{display:none}}
+.cls-bars + h4{margin:18px 0 0}
+.cls-hard{margin:6px 0 0;padding-left:18px}
+.cls-ans tr.ok td:nth-child(2){color:var(--ok)}
+.cls-ans tr.bad td:nth-child(2){color:var(--err)}
+.cls-ans td:nth-child(2){font-weight:700;width:24px}
+@media (max-width:900px){.cls-grid{grid-template-columns:1fr}}

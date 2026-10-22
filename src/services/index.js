@@ -8,6 +8,7 @@ import { mockAIService } from './ai/index.js';
 import { createClaudeAIService } from './ai/claude.js';
 import { localStorageService } from './storage/local.js';
 import { mockPublishService } from './publish/mock.js';
+import { httpClassroomService } from './classroom/http.js';
 
 const env = (import.meta.env || {});
 export const config = {
@@ -29,6 +30,7 @@ export const services = WS.services = {
   ai: mockAIService,
   storage: localStorageService,
   publish: mockPublishService,
+  classroom: null,                 // có khi chạy qua máy chủ (làm bài trên lớp)
   config,
   /* Hỏi máy chủ đang có gì. Không có máy chủ thì giữ nguyên giả lập. */
   async detect(){
@@ -38,6 +40,7 @@ export const services = WS.services = {
       const res = await fetch('/api/health', { signal: ctl.signal }); clearTimeout(t);
       if(!res.ok) return;
       const info = config.server = await res.json();
+      if(info.classroom) services.classroom = httpClassroomService;
       if(info.ai === 'claude' && !config.forceMockAI) services.ai = withFallback(createClaudeAIService(info), mockAIService);
     } catch(e){ /* không có máy chủ: chạy giả lập */ }
   },

@@ -15,6 +15,7 @@ const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.PORT || 5173);
 const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 const claude = HAS_KEY ? await import('./claude.js') : null;
+const classroom = await import('./classroom.js');
 
 const readJson = (req) => new Promise((resolve, reject) => {
   let raw = ''; req.setEncoding('utf8');
@@ -30,7 +31,13 @@ const routes = {
 };
 
 async function api(req, res){
-  if(req.method === 'GET' && req.url === '/api/health') return send(res, 200, { ok: true, ai: claude ? 'claude' : 'mock', model: claude ? claude.MODEL : null });
+  if(req.method === 'GET' && req.url === '/api/health') return send(res, 200, { ok: true, ai: claude ? 'claude' : 'mock', model: claude ? claude.MODEL : null, classroom: true });
+  const cls = classroom.routes[`${req.method} ${req.url}`];
+  if(cls){
+    try { send(res, 200, await cls(await readJson(req), { port: PORT })); }
+    catch(err){ if(!err.status) console.error(req.url, err); send(res, err.status || 500, { error: err.message }); }
+    return;
+  }
   const route = routes[`${req.method} ${req.url}`];
   if(!route) return send(res, 404, { error: 'Không có endpoint này' });
   if(!claude) return send(res, 503, { error: 'Máy chủ chưa có ANTHROPIC_API_KEY' });
@@ -54,8 +61,14 @@ if(DEV){
 }
 const DIST = path.join(root, 'dist', 'ws-studio.html');
 
+const STUDENT = path.join(root, 'server', 'student.html');
+
 http.createServer((req, res) => {
   if(req.url.startsWith('/api/')) return api(req, res);
+  if(req.method === 'GET' && /^\/lop(\/|\?|$)/.test(req.url)){
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+    return fs.createReadStream(STUDENT).pipe(res);
+  }
   if(vite){
     if(req.url === '/' ) req.url = '/ws-studio.html';
     return vite.middlewares(req, res);
@@ -67,4 +80,5 @@ http.createServer((req, res) => {
   res.writeHead(404); res.end();
 }).listen(PORT, () => {
   console.log(`ws-studio: http://localhost:${PORT}  (${DEV ? 'dev' : 'bản dựng'}, AI: ${claude ? 'Claude ' + claude.MODEL : 'giả lập, chưa có ANTHROPIC_API_KEY'})`);
+  const lan = classroom.lanUrls(PORT); if(lan.length) console.log(`Học sinh vào làm bài: ${lan.join('  ')}`);
 });

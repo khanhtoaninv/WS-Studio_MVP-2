@@ -15,7 +15,7 @@ App.applyTheme();
 App.parse = () => {
   const h = (location.hash||'#/').slice(1); const [path, qs] = h.split('?'); const parts = path.split('/').filter(Boolean);
   const q = Object.fromEntries(new URLSearchParams(qs||''));
-  const map = {'':'home','soan':'wizard','phieu':parts[1]?'editor':'worksheets','xem':'viewer','kho':'library','bai':'exercise','giao-trinh':'curriculum','tieu-chuan':'standards','duyet':'review','nhat-ky':'log','cau-hinh':'admin','cai-dat':'settings','phan-hoi':'feedback'};
+  const map = {'':'home','soan':'wizard','phieu':parts[1]?'editor':'worksheets','xem':'viewer','lop':'classroom','kho':'library','bai':'exercise','giao-trinh':'curriculum','tieu-chuan':'standards','duyet':'review','nhat-ky':'log','cau-hinh':'admin','cai-dat':'settings','phan-hoi':'feedback'};
   return {name:map[parts[0]||'']||'home', params:Object.assign({id:parts[1]}, q), path};
 };
 
@@ -25,7 +25,7 @@ App.navItems = () => {
   return [
     {r:'home', href:'#/', ico:'⌂', label:'Dashboard'},
     {r:'wizard', href:'#/soan', ico:'＋', label:'Soạn phiếu', cta:true},
-    {r:'worksheets', href:'#/phieu', ico:'▤', label:'Phiếu', alt:['editor','viewer']},
+    {r:'worksheets', href:'#/phieu', ico:'▤', label:'Phiếu', alt:['editor','viewer','classroom']},
     {r:'library', href:'#/kho', ico:'▦', label:'Kho bài', alt:['exercise']},
     {r:'curriculum', href:'#/giao-trinh', ico:'❖', label:'Giáo trình'},
     {r:'standards', href:'#/tieu-chuan', ico:'✓', label:'Tiêu chuẩn'},

@@ -34,7 +34,7 @@ views.viewer = {
     if(main.__api) main.__api.destroy();
     main.innerHTML = `<div style="display:flex;flex-direction:column;height:100%"><div class="row vw-head" style="padding:8px 14px;background:var(--paper);border-bottom:1px solid var(--line)">${UI.btn(p.from==='editor'?'← Về biên tập':'← Phiếu',{a:'go', size:'sm', kind:'ghost', data:{href:p.from==='editor'?'#/phieu/'+ws.id:'#/phieu/'+ws.id}})}<b>${esc(ws.title)}</b>${UI.wsChip(ws)}<span class="spacer"></span>
       <div class="seg"><button class="${kind==='teacher'?'on':''}" data-a="go" data-href="#/xem/${ws.id}?kind=teacher${p.from?'&from='+p.from:''}">Bản giáo viên</button><button class="${kind==='student'?'on':''}" data-a="go" data-href="#/xem/${ws.id}?kind=student${p.from?'&from='+p.from:''}">Xem như học sinh</button></div>
-      ${R.can('download',ws).ok?UI.btn('Tải bản chính thức',{a:'openExport', kind:'primary', size:'sm', data:{w:ws.id}}):''}</div><div id="vw" style="flex:1;min-height:0"></div></div>`;
+      ${kind==='teacher'&&ok?UI.btn('Làm bài trên lớp',{a:'go', size:'sm', data:{href:'#/lop/'+ws.id}, title:'Cả lớp làm phiếu này trên điện thoại, xem kết quả và xếp hạng'}):''}${R.can('download',ws).ok?UI.btn('Tải bản chính thức',{a:'openExport', kind:'primary', size:'sm', data:{w:ws.id}}):''}</div><div id="vw" style="flex:1;min-height:0"></div></div>`;
     const data = EX.viewerData(ws, kind, {useDraft:!ok && ws.status!=='pending', mediaFail:S.state.demo.mediaFail});
     main.__api = WSV.mount(document.getElementById('vw'), data, {flag: ok?'':'Bản xem trước · chưa duyệt cấp 2', globalKeys:true, storageKey:`wsv:${ws.code}:v${ws.versionNo}:${kind}:app`});
     WS.audit('Mở viewer '+(kind==='teacher'?'bản giáo viên':'bản học sinh'),'worksheet',ws.id); S.persistSoon();

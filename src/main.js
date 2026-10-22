@@ -22,6 +22,7 @@ import './ui/views/editor.js';
 import './ui/views/library.js';
 import './ui/views/review.js';
 import './ui/views/admin.js';
+import './ui/views/classroom.js';
 import { WS } from './ws.js';
 import './ui/app.js';
 

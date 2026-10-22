@@ -9,7 +9,7 @@
     "build": "vite build",
     "start": "vite build && node server/index.js",
     "test": "vite build && python3 tests/run_all.py",
-    "test:server": "vite build && python3 tests/e2e/t_server.py"
+    "test:server": "vite build && python3 tests/e2e/t_server.py && python3 tests/e2e/t_classroom.py"
   },
   "devDependencies": {
     "vite": "6.3.5",
