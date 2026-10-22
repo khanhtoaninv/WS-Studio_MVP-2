@@ -1,6 +1,6 @@
 /* ============ VIEW: Làm bài trên lớp (D-129) ============ */
 import { WS } from '../../ws.js';
-import { valueText, answerText } from '../../shared/classroom.js';
+import { valueText, answerText, mergePaper } from '../../shared/classroom.js';
 import { VERSION } from '../../version.js';
 const U = WS.U, Q = WS.Q, S = WS.S, UI = WS.UI, EX = WS.EX;
 const esc = U.esc; const views = WS.views;
@@ -10,7 +10,8 @@ const KEY = 'wsstudio.class';
 const saved = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ return {}; } };
 const remember = (wsId, v) => { try { const m = saved(); if(v) m[wsId] = v; else delete m[wsId]; localStorage.setItem(KEY, JSON.stringify(m)); } catch(e){} };
 
-let cur = { wsId:null, st:null, err:null, timer:null, busy:false };
+let cur = { wsId:null, st:null, err:null, timer:null, busy:false, mode:'sheet' };
+const MODES = { sheet:'Phiếu', quiz:'Quiz' };
 const svc = () => WS.services.classroom;
 const pct = r => Math.round(r * 100);
 const fmtT = t => t ? U.fmtTime(t) : '';
@@ -54,6 +55,11 @@ function draw(){
   if(!st){
     main.innerHTML = `<div class="page">${head}<div class="card cls-start"><p>Mở một phiên để cả lớp làm phiếu này trên điện thoại hoặc máy tính. Mỗi học sinh vào bằng <b>mã phiên</b>, nhập tên và nhận <b>mã cá nhân</b> để vào lại nếu lỡ thoát. Đáp án chỉ nằm trên máy giáo viên.</p>
       <p class="small muted">Kết quả lưu tạm trên máy này; tắt cửa sổ máy chủ là mất. Máy giáo viên và học sinh cần cùng mạng Wi-Fi.</p>
+      <fieldset class="cls-mode"><legend>Giao diện học sinh làm bài</legend>
+        ${[['sheet', 'Phiếu', 'Học sinh thấy nguyên phiếu như bản giáo viên chiếu và làm ngay trên phiếu. Nộp xong thấy câu đúng màu xanh, câu sai màu đỏ.'],
+          ['quiz', 'Quiz', 'Từng câu xếp dọc, nút bấm lớn, hợp màn hình điện thoại nhỏ.']].map(([v, l, d]) =>
+          `<label class="cls-opt${cur.mode === v ? ' on' : ''}"><input type="radio" name="clsmode" value="${v}" data-c="clsMode"${cur.mode === v ? ' checked' : ''}><span><b>${l}</b>${v === 'sheet' ? ' <span class="small muted">(mặc định)</span>' : ''}<br><span class="small muted">${d}</span></span></label>`).join('')}
+        <div class="small muted">Thứ tự phương án được đảo riêng cho từng em ở những dạng bài đảo được.</div></fieldset>
       ${cur.err ? `<div class="banner err">${esc(cur.err)}</div>` : ''}
       ${UI.btn(cur.busy ? 'Đang mở…' : 'Bắt đầu phiên', { a:'clsStart', kind:'primary' })}</div></div>`;
     return;
@@ -63,7 +69,7 @@ function draw(){
   const total = st.paper.items.reduce((n, it) => n + it.questions.length, 0);
   main.innerHTML = `<div class="page">${head}
     <div class="card cls-live ${ended ? 'ended' : ''}">
-      <div class="cls-code"><span class="lbl">Mã phiên</span><b>${esc(st.code)}</b></div>
+      <div class="cls-code"><span class="lbl">Mã phiên</span><b>${esc(st.code)}</b><span class="small muted">Dạng ${MODES[st.mode] || 'Quiz'}</span></div>
       <div class="cls-join"><span class="lbl">Học sinh mở</span><code class="cls-url">${esc(url)}</code>
         <div class="small muted">${ended ? `Phiên đã kết thúc lúc ${fmtT(st.endedAt)}.` : 'Đọc hoặc chiếu địa chỉ và mã này cho cả lớp.'}${(st.joinUrls || []).length ? '' : ' Không tìm thấy địa chỉ mạng của máy này; kiểm tra Wi-Fi.'}</div></div>
       <div class="row wrap">${ended ? UI.btn('Mở lại phiên', { a:'clsReopen', size:'sm' }) : UI.btn('Kết thúc và tổng kết', { a:'clsEnd', kind:'primary', size:'sm' })}
@@ -89,8 +95,30 @@ function draw(){
     </section></div>`;
 }
 
+/* Dạng Phiếu: mở đúng phiếu với bài làm của em, đúng xanh sai đỏ; vẫn dùng bút và công cụ trình bày */
+let sheet = null;
+function closeSheet(){ if(!sheet) return; sheet.api.destroy(); sheet.el.remove(); sheet = null; }
+function studentSheet(sid){
+  const st = cur.st; const list = st.students.slice().sort((a, b) => a.joinedAt - b.joinedAt);
+  const i = list.findIndex(x => x.sid === sid); const s = list[i]; if(!s) return;
+  closeSheet();
+  const el = document.createElement('div'); el.className = 'cls-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Bài làm của ' + s.name);
+  el.innerHTML = `<div class="cls-sheet-bar">${UI.btn('← Quay lại', { a:'clsSheetX', size:'sm', kind:'ghost' })}
+    <b>${esc(s.name)}</b><span class="small muted">mã ${esc(s.code)} · ${s.submittedAt ? 'nộp lúc ' + fmtT(s.submittedAt) : 'chưa nộp'}</span>
+    ${UI.chip(`Đúng ${s.result.correct}/${s.result.total} · ${s.result.pct}%`, s.result.pct >= 80 ? 'green' : s.result.pct >= 50 ? 'orange' : 'grey')}
+    <span style="flex:1"></span>
+    ${UI.btn('◀ Em trước', { a:'clsSheetGo', size:'sm', data:{ sid: (list[i - 1] || {}).sid || '' }, disabled: i === 0 })}
+    ${UI.btn('Em sau ▶', { a:'clsSheetGo', size:'sm', data:{ sid: (list[i + 1] || {}).sid || '' }, disabled: i === list.length - 1 })}</div><div class="cls-sheet-vw"></div>`;
+  document.body.appendChild(el);
+  const data = JSON.parse(JSON.stringify(mergePaper(st.paper, st.key)));
+  const api = WSV.mount(el.querySelector('.cls-sheet-vw'), data, { globalKeys:true, flag:'Bài làm của ' + s.name, storageKey:`wsv:cls:${st.code}:${s.sid}`,
+    fill:{ values: Object.assign({}, s.answers), locked:true, result: s.result } });
+  sheet = { el, api };
+}
+
 function studentDetail(sid){
   const st = cur.st; const s = st && st.students.find(x => x.sid === sid); if(!s) return;
+  if(st.mode === 'sheet') return studentSheet(sid);
   const body = st.paper.items.map(it => `<h4>Bài ${it.no}. ${esc(it.title)}</h4><table class="tbl cls-ans"><tbody>${it.questions.map((q, i) => {
     const ok = s.result.perQ[q.id]; const v = valueText(it, q, s.answers[q.id]);
     return `<tr class="${ok === true ? 'ok' : ok === false ? 'bad' : ''}"><td>${i + 1}</td><td>${ok === true ? '✓' : ok === false ? '✕' : '–'}</td><td>${v ? esc(v) : '<span class="muted">(bỏ trống)</span>'}</td><td class="small muted">Đáp án: ${esc(answerText(it, q, st.key[q.id] || {}))}</td></tr>`; }).join('')}</tbody></table>`).join('');
@@ -128,10 +156,10 @@ function reportPng(){
 
 views.classroom = {
   render(main, p){
-    if(cur.wsId !== p.id){ cur = { wsId: p.id, st: null, err: null, timer: cur.timer, busy: false }; }
+    if(cur.wsId !== p.id){ cur = { wsId: p.id, st: null, err: null, timer: cur.timer, busy: false, mode: 'sheet' }; }
     draw(); if(saved()[p.id]){ refresh(); poll(true); }
   },
-  leave(){ poll(false); }
+  leave(){ poll(false); closeSheet(); }
 };
 
 const act = (fn) => async (...a) => { try { await fn(...a); } catch(e){ cur.err = e.message; } cur.busy = false; draw(); };
@@ -139,8 +167,7 @@ Object.assign(WS.ACT, {
   clsStart: act(async () => {
     if(cur.busy) return; cur.busy = true; draw();
     const ws = Q.ws(cur.wsId); const data = EX.viewerData(ws, 'teacher', { useDraft: false });
-    data.items.forEach(it => { it.media = []; });
-    const r = await svc().start(data);
+    const r = await svc().start(data, cur.mode);
     remember(cur.wsId, { code: r.code, token: r.token }); cur.joinUrls = r.joinUrls;
     WS.audit('Mở phiên làm bài trên lớp', 'worksheet', ws.id, { note: 'mã ' + r.code }); S.persistSoon();
     await refresh(); poll(true);
@@ -150,5 +177,8 @@ Object.assign(WS.ACT, {
   clsNew: () => UI.confirm({ title: 'Mở phiên mới?', body: '<p>Phiên hiện tại vẫn còn trên máy chủ nhưng màn này sẽ chuyển sang phiên mới. Nên xuất ảnh báo cáo trước.</p>', ok: 'Phiên mới' })
     .then(v => { if(!v) return; remember(cur.wsId, null); cur.st = null; poll(false); draw(); }),
   clsStudent: el => studentDetail(el.dataset.sid),
+  clsMode: el => { cur.mode = el.value; draw(); },
+  clsSheetX: () => closeSheet(),
+  clsSheetGo: el => { if(el.dataset.sid) studentSheet(el.dataset.sid); },
   clsPng: () => { if(cur.st) reportPng(); },
 });

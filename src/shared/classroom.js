@@ -8,13 +8,73 @@ export function splitPaper(data){
   const key = {};
   const items = data.items.map(it => ({
     id: it.id, no: it.no, type: it.type, title: it.title, instruction: it.instruction, passage: it.passage || '',
-    wordBank: it.wordBank || [], rightList: it.rightList || null,
+    wordBank: it.wordBank || [], rightList: it.rightList || null, layout: it.layout || 'L1', media: it.media || [],
     questions: it.questions.map(q => {
       key[q.id] = Object.fromEntries(ANSWER_KEYS.filter(k => q[k] !== undefined).map(k => [k, q[k]]));
       return Object.fromEntries(Object.entries(q).filter(([k]) => !ANSWER_KEYS.includes(k)));
     }),
   }));
-  return { paper: { meta: { code: data.meta.code, version: data.meta.version, title: data.meta.title, lesson: data.meta.lesson }, items }, key };
+  const m = data.meta;
+  return { paper: { meta: { code: m.code, version: m.version, title: m.title, lesson: m.lesson, theme: m.theme || null, pagesTarget: m.pagesTarget || null }, items }, key };
+}
+
+/* Gộp đề và đáp án lại thành dữ liệu viewer bản giáo viên (xem bài từng học sinh trên phiếu) */
+export function mergePaper(paper, key){
+  return { meta: Object.assign({}, paper.meta, { kind: 'teacher' }), qfb: null,
+    items: paper.items.map(it => Object.assign({}, it, { questions: it.questions.map(q => Object.assign({}, q, key[q.id] || {})) })) };
+}
+
+/* ---------- Đảo đáp án cho từng học sinh (D-131) ----------
+   Hệ thống tự quyết, giáo viên không phải chọn:
+   - Đảo: phương án trắc nghiệm (mcq), phương án điền khuyết có lựa chọn (cloze_mcq), cột phải bài nối (matching).
+   - Không đảo: True/False/Not Given (thứ tự cố định), sắp xếp câu (vốn đã xáo), các dạng tự điền,
+     và câu trắc nghiệm có phương án kiểu "All of the above", "A and B" (đảo sẽ sai nghĩa).
+   Thứ tự của mỗi em cố định theo mã phiên + mã cá nhân, nên vào lại vẫn y nguyên. Máy chủ chỉ lưu bài làm theo thứ tự gốc. */
+const NO_SHUFFLE = /\b(all|none|both|neither)\b[^.]*\b(above|below|these|them|of the)\b|\b[A-D]\s*(and|or|&)\s*[A-D]\b/i;
+function rng(str){
+  let h = 2166136261; for(let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function perm(n, r){
+  const a = [...Array(n).keys()];
+  for(let i = n - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  if(n > 1 && a.every((v, i) => v === i)) a.push(a.shift());       // tránh trùng thứ tự gốc
+  return a;
+}
+const optText = (o) => typeof o === 'string' ? o : (o && o.text) || '';
+/* { qid: hoán vị } với hoán vị[vị trí hiển thị] = vị trí gốc */
+export function shufflePlan(paper, seed){
+  const plan = {};
+  paper.items.forEach(it => {
+    if(it.type === 'matching' && (it.rightList || []).length > 1){
+      const p = perm(it.rightList.length, rng(seed + '|' + it.id)); it.questions.forEach(q => { plan[q.id] = p; });
+    }
+    if(it.type === 'mcq' || it.type === 'cloze_mcq') it.questions.forEach(q => {
+      const opts = q.options || [];
+      if(opts.length > 1 && !opts.some(o => NO_SHUFFLE.test(optText(o)))) plan[q.id] = perm(opts.length, rng(seed + '|' + q.id));
+    });
+  });
+  return plan;
+}
+/* Đề theo thứ tự riêng của một học sinh */
+export function studentPaper(paper, plan){
+  return Object.assign({}, paper, { items: paper.items.map(it => {
+    const out = Object.assign({}, it, { questions: it.questions.map(q => plan[q.id] && q.options ? Object.assign({}, q, { options: plan[q.id].map(i => q.options[i]) }) : q) });
+    if(it.type === 'matching' && it.questions.length && plan[it.questions[0].id]) out.rightList = plan[it.questions[0].id].map(i => it.rightList[i]);
+    return out;
+  }) });
+}
+const isEmpty = (v) => v === undefined || v === null || v === '';
+/* Đổi bài làm giữa thứ tự hiển thị của học sinh và thứ tự gốc */
+export function toOriginal(plan, answers){
+  const out = {};
+  for(const [qid, v] of Object.entries(answers || {})){ const p = plan[qid]; out[qid] = p && !isEmpty(v) && p[+v] !== undefined ? String(p[+v]) : v; }
+  return out;
+}
+export function toDisplay(plan, answers){
+  const out = {};
+  for(const [qid, v] of Object.entries(answers || {})){ const p = plan[qid]; out[qid] = p && !isEmpty(v) && p.indexOf(+v) >= 0 ? String(p.indexOf(+v)) : v; }
+  return out;
 }
 
 export const norm = (s) => String(s ?? '').toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9' ]/g, ' ').replace(/\s+/g, ' ').trim();

@@ -138,24 +138,56 @@ function blankify(text, ans, T){
 function ansLine(T, html){ return T ? '<div class="ans">'+html+'</div>' : ''; }
 function expl(T, q){ return T && q.explanation ? '<div class="expl">'+esc(q.explanation)+'</div>' : ''; }
 function qtog(T){ return T ? '<button class="qtog" data-act="qtog" title="Xem/ẩn đáp án câu" aria-label="Xem hoặc ẩn đáp án câu">?</button>' : ''; }
+/* Chế độ làm bài trên phiếu của Làm bài trên lớp (D-131): opts.fill = {values, onChange, locked, result}.
+   Đặt trong lúc dựng trang để qHTML hiện ô nhập, lựa chọn đã chọn và màu đúng/sai. */
+var FILL = null;
+function fv(q){ var v = FILL.values[q.id]; return v==null ? '' : String(v); }
+function fcls(q){
+  if(!FILL) return '';
+  var r = FILL.result && FILL.result.perQ ? FILL.result.perQ[q.id] : undefined;
+  return ' fq'+(FILL.locked?' locked':'')+(r===true?' res-ok':r===false?' res-no':FILL.result?' res-none':'');
+}
+function pk(q, k){ return FILL && fv(q)===String(k) ? ' picked' : ''; }
+function finp(q, cls, ph){
+  return '<input class="fill-inp'+(cls?' '+cls:'')+'" data-fq="'+esc(q.id)+'" value="'+esc(fv(q))+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(FILL.locked?' readonly':'')+
+    ' autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Câu '+esc(q.id)+'">';
+}
+function fblank(text, ans, T, q){
+  var first = true;
+  return esc(text).replace(/_{2,}/g, function(){
+    var inner = first ? finp(q) : '&nbsp;'; first = false;
+    return '<span class="blank fblank">'+inner+(T&&ans!=null?'<span class="ans-in">'+esc(ans)+'</span>':'')+'</span>'; });
+}
+function ordWords(v){ return v ? String(v).replace(/[.?!]+$/,'').split(' ').filter(Boolean) : []; }
 function qHTML(it, q, i, T){
-  var head = '<div class="q" data-q="'+esc(q.id)+'" data-type="'+it.type+'"><span class="qn">'+(i+1)+'</span><div class="qb">';
+  var head = '<div class="q'+fcls(q)+'" data-q="'+esc(q.id)+'" data-type="'+it.type+'"><span class="qn">'+(i+1)+'</span><div class="qb">';
   var tail = '</div>'+qtog(T)+'</div>';
+  var F = FILL;
   switch(it.type){
     case 'mcq': {
       var ci = T ? q.options.findIndex(function(o){return o.id===q.correctId;}) : -1;
-      return head+'<span class="qt">'+blankify(q.stem, null, false)+'</span><div class="opts">'+q.options.map(function(o,k){ return '<span class="opt'+(k===ci?' c':'')+'" data-k="'+k+'"><b>'+LET[k]+'</b> '+esc(o.text)+'</span>'; }).join('')+'</div>'+
+      return head+'<span class="qt">'+blankify(q.stem, null, false)+'</span><div class="opts">'+q.options.map(function(o,k){ return '<span class="opt'+(k===ci?' c':'')+pk(q,k)+'" data-k="'+k+'"><b>'+LET[k]+'</b> '+esc(o.text)+'</span>'; }).join('')+'</div>'+
         ansLine(T, ci>=0?('Answer: '+LET[ci]+' · '+esc(q.options[ci].text)):'')+expl(T,q)+tail; }
-    case 'fill_blank': return head+'<span class="qt">'+blankify(q.text, (q.accepted||[])[0], T)+'</span>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
-    case 'word_form': return head+'<span class="qt">'+blankify(q.text, (q.accepted||[])[0], T)+'<span class="base">'+esc(q.baseWord)+'</span></span>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
-    case 'ordering': return head+'<div class="ord">'+(q.words||[]).map(function(w,k){return '<span data-k="'+k+'">'+esc(w)+'</span>';}).join('')+'</div><span class="line">'+(T?'<span class="ans-in">'+esc(q.answerText)+'</span>':'')+'</span>'+expl(T,q)+tail;
-    case 'tfng': return head+'<span class="qt">'+esc(q.statement)+'</span><span class="tfbox">'+['T','F','NG'].map(function(a){return '<span data-k="'+a+'"'+(T&&q.answer===a?' class="c"':'')+'>'+a+'</span>';}).join('')+'</span>'+ansLine(T,'Answer: '+esc(q.answer||''))+expl(T,q)+tail;
-    case 'cloze_mcq': return '<div class="q" data-q="'+esc(q.id)+'" data-type="cloze_mcq"><span class="qn">'+q.n+'</span><div class="qb"><div class="opts">'+(q.options||[]).map(function(o,k){return '<span class="opt'+(T&&k===q.correctIdx?' c':'')+'" data-k="'+k+'"><b>'+LET[k]+'</b> '+esc(o)+'</span>';}).join('')+'</div>'+ansLine(T, T&&q.correctIdx!=null?('Answer: '+LET[q.correctIdx]+' · '+esc(q.options[q.correctIdx])):'')+expl(T,q)+'</div>'+qtog(T)+'</div>';
-    case 'rewrite': return head+'<span class="qt">'+esc(q.original)+'</span><div style="margin-top:4px"><b style="font-weight:600">'+esc(q.lead)+'</b> <span class="line" style="display:inline-block;width:72%;vertical-align:bottom"></span></div>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
-    case 'short_answer': return head+'<span class="qt">'+esc(q.question)+'</span><span class="line"></span>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
+    case 'fill_blank': return head+'<span class="qt">'+(F?fblank(q.text,(q.accepted||[])[0],T,q):blankify(q.text, (q.accepted||[])[0], T))+'</span>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
+    case 'word_form': return head+'<span class="qt">'+(F?fblank(q.text,(q.accepted||[])[0],T,q):blankify(q.text, (q.accepted||[])[0], T))+'<span class="base">'+esc(q.baseWord)+'</span></span>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
+    case 'ordering': {
+      if(F){
+        var built = ordWords(fv(q)), cnt = {}; built.forEach(function(w){ cnt[w]=(cnt[w]||0)+1; });
+        return head+'<div class="ord">'+(q.words||[]).map(function(w,k){ var u = cnt[w]>0; if(u) cnt[w]--; return '<span data-k="'+k+'"'+(u?' class="used"':'')+'>'+esc(w)+'</span>'; }).join('')+'</div>'+
+          '<span class="line ord-line"><span class="ord-txt">'+esc(fv(q))+'</span>'+(built.length&&!F.locked?'<button class="ord-clr" data-ordclr="1" title="Xếp lại từ đầu" aria-label="Xếp lại từ đầu">↺</button>':'')+(T?'<span class="ans-in">'+esc(q.answerText)+'</span>':'')+'</span>'+expl(T,q)+tail;
+      }
+      return head+'<div class="ord">'+(q.words||[]).map(function(w,k){return '<span data-k="'+k+'">'+esc(w)+'</span>';}).join('')+'</div><span class="line">'+(T?'<span class="ans-in">'+esc(q.answerText)+'</span>':'')+'</span>'+expl(T,q)+tail; }
+    case 'tfng': return head+'<span class="qt">'+esc(q.statement)+'</span><span class="tfbox">'+['T','F','NG'].map(function(a){ var c=(T&&q.answer===a?'c':'')+pk(q,a); return '<span data-k="'+a+'"'+(c?' class="'+c.trim()+'"':'')+'>'+a+'</span>';}).join('')+'</span>'+ansLine(T,'Answer: '+esc(q.answer||''))+expl(T,q)+tail;
+    case 'cloze_mcq': return '<div class="q'+fcls(q)+'" data-q="'+esc(q.id)+'" data-type="cloze_mcq"><span class="qn">'+q.n+'</span><div class="qb"><div class="opts">'+(q.options||[]).map(function(o,k){return '<span class="opt'+(T&&k===q.correctIdx?' c':'')+pk(q,k)+'" data-k="'+k+'"><b>'+LET[k]+'</b> '+esc(o)+'</span>';}).join('')+'</div>'+ansLine(T, T&&q.correctIdx!=null?('Answer: '+LET[q.correctIdx]+' · '+esc(q.options[q.correctIdx])):'')+expl(T,q)+'</div>'+qtog(T)+'</div>';
+    case 'rewrite':
+      if(F) return head+'<span class="qt">'+esc(q.original)+'</span><div style="margin-top:4px">'+finp(q,'wide',(q.lead||'')+' …')+'</div>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
+      return head+'<span class="qt">'+esc(q.original)+'</span><div style="margin-top:4px"><b style="font-weight:600">'+esc(q.lead)+'</b> <span class="line" style="display:inline-block;width:72%;vertical-align:bottom"></span></div>'+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
+    case 'short_answer': return head+'<span class="qt">'+esc(q.question)+'</span>'+(F?'<div style="margin-top:4px">'+finp(q,'wide','Tối đa '+(q.maxWords||5)+' từ')+'</div>':'<span class="line"></span>')+ansLine(T,'Accept: '+esc((q.accepted||[]).join(' / ')))+expl(T,q)+tail;
     case 'matching': {
       var li = T ? (it.rightList||[]).indexOf(q.right) : -1;
-      return '<div class="q ml" data-q="'+esc(q.id)+'" data-type="matching"><span class="qn">'+(i+1)+'</span><div class="qb">'+esc(q.left)+' <span class="blank" style="min-width:34px">'+(T&&li>=0?'<span class="ans-in">'+LET[li]+'</span>':'&nbsp;')+'</span></div>'+qtog(T)+'</div>';
+      var slot = F ? '<span class="blank fblank" style="min-width:46px"><select class="fill-sel" data-fq="'+esc(q.id)+'"'+(F.locked?' disabled':'')+' aria-label="Chọn chữ cái"><option value="">?</option>'+(it.rightList||[]).map(function(r,k){ return '<option value="'+k+'"'+(fv(q)===String(k)?' selected':'')+'>'+LET[k]+'</option>'; }).join('')+'</select>'+(T&&li>=0?'<span class="ans-in">'+LET[li]+'</span>':'')+'</span>'
+        : '<span class="blank" style="min-width:34px">'+(T&&li>=0?'<span class="ans-in">'+LET[li]+'</span>':'&nbsp;')+'</span>';
+      return '<div class="q ml'+fcls(q)+'" data-q="'+esc(q.id)+'" data-type="matching"><span class="qn">'+(i+1)+'</span><div class="qb">'+esc(q.left)+' '+slot+'</div>'+qtog(T)+'</div>';
     }
   }
   return '';
@@ -274,7 +306,7 @@ WSV.mount = function(root, data, opts){
       '<div class="grp"><button class="wb" data-act="mode-page" title="Theo trang">▤ Trang</button><button class="wb" data-act="mode-scroll" title="Cuộn liên tục">☰ Cuộn</button><button class="wb" data-act="present" title="Toàn màn hình / Trình chiếu">⛶ Trình chiếu</button><button class="wb" data-act="two" title="1 hoặc 2 trang">⧉ 2 trang</button></div>'+
       '<div class="grp"><button class="wb sm" data-act="prev" title="Trang trước (←)" aria-label="Trang trước">◀</button><select class="wsv-sel" data-act="goto" aria-label="Đi tới"></select><button class="wb sm" data-act="next" title="Trang sau (→)" aria-label="Trang sau">▶</button></div>'+
       '<div class="grp"><button class="wb sm" data-act="zout" title="Thu nhỏ (-)" aria-label="Thu nhỏ">−</button><button class="wb sm" data-act="zreset" title="Về tỷ lệ mặc định" aria-label="Về tỷ lệ mặc định">100%</button><button class="wb sm" data-act="zin" title="Phóng to (+)" aria-label="Phóng to">+</button><button class="wb sm" data-act="fitw" title="Vừa chiều ngang" aria-label="Vừa chiều ngang">↔</button><button class="wb sm" data-act="fith" title="Vừa chiều cao" aria-label="Vừa chiều cao">↕</button><button class="wb sm" data-act="zregion" title="Phóng vùng: kéo chọn vùng (Esc để về)" aria-label="Phóng vùng">🔍</button></div>'+
-      (T?'<div class="grp"><button class="wb" data-act="allans" title="Xem/ẩn đáp án toàn phiếu (A)">✓ Đáp án</button><button class="wb sm" data-act="expl" title="Xem/ẩn giải thích">ⓘ</button><button class="wb" data-act="quiz" title="Chế độ Quiz">🎯 Quiz</button><button class="wb" data-act="play" title="Làm bài ngay trên phiếu">🖱 Làm trên phiếu</button></div>':'')+
+      (T?'<div class="grp"><button class="wb" data-act="allans" title="Xem/ẩn đáp án toàn phiếu (A)">✓ Đáp án</button><button class="wb sm" data-act="expl" title="Xem/ẩn giải thích">ⓘ</button>'+(opts.fill?'':'<button class="wb" data-act="quiz" title="Chế độ Quiz">🎯 Quiz</button><button class="wb" data-act="play" title="Làm bài ngay trên phiếu">🖱 Làm trên phiếu</button>')+'</div>':'')+
       '<div class="grp"><button class="wb" data-act="cursor" title="Con trỏ (Esc)">➚</button><button class="wb" data-act="pen" title="Bút (khóa) · P. Giữ Shift: đường thẳng; Ctrl/Cmd: đánh dấu; Ctrl+Shift: khung">✎ Bút</button><button class="wb sm" data-act="eraser" title="Tẩy (E)" aria-label="Tẩy">⌫</button><button class="wb sm" data-act="penmore" title="Màu, độ dày, hoàn tác, xóa nét" aria-label="Tùy chọn bút" aria-expanded="false">▾</button><span class="pen-more">'+
         ['#E8483B','#2D5BD0','#1E8A4C','#1A2233','#F2B705'].map(function(c){return '<button class="wb sm" data-act="color" data-c="'+c+'" aria-label="Màu" title="Màu"><span style="width:14px;height:14px;border-radius:50%;background:'+c+';display:inline-block"></span></button>';}).join('')+
         '<select class="wsv-sel" data-act="width" aria-label="Độ dày" style="width:70px"><option value="2">Mảnh</option><option value="3" selected>Vừa</option><option value="6">Dày</option></select>'+
@@ -296,13 +328,16 @@ WSV.mount = function(root, data, opts){
   function render(keepScroll){
     var st = stage.scrollTop/(stage.scrollHeight||1);
     var o = {teacher:T, mini:opts.mini, mediaFail:data.mediaFail && !V.retried, retried:V.retried, pinned:V.store.pins, cur:V.cur};
-    var pages = WSV.paginate(root, data, o);
-    var target = data.meta.pagesTarget;
-    if(target && pages.length > target && !opts.noCompact){
-      // D-87: try compaction, then L4 for long blocks
-      data.items.forEach(function(it){ if(!it._lay && (it.questions||[]).length>=4 && ['mcq','fill_blank','word_form','tfng'].indexOf(it.type)>=0 && WSV.effLayout(it)==='L1') it._lay='L4'; });
-      pages = WSV.paginate(root, data, o);
-    }
+    FILL = opts.fill || null;
+    try {
+      var pages = WSV.paginate(root, data, o);
+      var target = data.meta.pagesTarget;
+      if(target && pages.length > target && !opts.noCompact){
+        // D-87: try compaction, then L4 for long blocks
+        data.items.forEach(function(it){ if(!it._lay && (it.questions||[]).length>=4 && ['mcq','fill_blank','word_form','tfng'].indexOf(it.type)>=0 && WSV.effLayout(it)==='L1') it._lay='L4'; });
+        pages = WSV.paginate(root, data, o);
+      }
+    } finally { FILL = null; }
     V.pages = pages; V.s = computeScale();
     pagesEl.innerHTML = pages.map(function(p, i){
       return '<div class="wsv-pw" data-page="'+i+'" style="width:'+Math.round(794*V.s)+'px;height:'+Math.round((p.tall?Math.max(1123,p.h+150):1123)*V.s)+'px"><div class="wsv-page'+(p.tall?' tall':'')+'" style="transform:scale('+V.s+')'+(p.tall?';height:'+Math.max(1123,p.h+150)+'px':'')+'">'+WSV.pageHTML(data, p, i, pages.length, o)+'<canvas class="wsv-ink" width="794" height="'+(p.tall?Math.max(1123,p.h+150):1123)+'"'+(p.tall?' style="height:'+Math.max(1123,p.h+150)+'px"':'')+'></canvas></div></div>';
@@ -661,6 +696,33 @@ WSV.mount = function(root, data, opts){
     return false;
   }
 
+  /* ---------- làm bài trên phiếu cho Làm bài trên lớp (D-131) ---------- */
+  function fillSet(qid, v){ var F=opts.fill; F.values[qid]=v; if(F.onChange) F.onChange(qid, v); }
+  function fillClick(e){
+    var F = opts.fill; if(!F) return false;
+    var qEl = e.target.closest('.q.fq'); if(!qEl) return false;
+    var hit = e.target.closest('.opt,.tfbox span,.ord span,.ord-clr');
+    if(!hit) return false;
+    if(F.locked) return true;
+    var f = findQ(qEl.dataset.q); if(!f) return false; var it=f.it, q=f.q;
+    if(hit.matches('.opt,.tfbox span')){
+      var k = hit.dataset.k, was = hit.classList.contains('picked');
+      qEl.querySelectorAll('.opt,.tfbox span').forEach(function(o){ o.classList.remove('picked'); });
+      if(!was) hit.classList.add('picked');
+      fillSet(q.id, was ? '' : String(k)); return true;
+    }
+    var txt = qEl.querySelector('.ord-txt');
+    if(hit.matches('.ord-clr')){ fillSet(q.id, ''); qEl.querySelectorAll('.ord span').forEach(function(o){ o.classList.remove('used'); }); txt.textContent=''; hit.remove(); return true; }
+    if(hit.classList.contains('used')) return true;
+    var words = ordWords(F.values[q.id]); words.push(hit.textContent); hit.classList.add('used');
+    var v = words.join(' ') + (words.length===(q.words||[]).length ? (q.punct||'.') : '');
+    fillSet(q.id, v); txt.textContent = v;
+    if(!qEl.querySelector('.ord-clr')){ var b=document.createElement('button'); b.className='ord-clr'; b.dataset.ordclr='1'; b.title='Xếp lại từ đầu'; b.setAttribute('aria-label','Xếp lại từ đầu'); b.textContent='↺'; txt.after(b); }
+    return true;
+  }
+  root.addEventListener('input', function(e){ if(opts.fill && !opts.fill.locked && e.target.matches('.fill-inp')) fillSet(e.target.dataset.fq, e.target.value); });
+  root.addEventListener('change', function(e){ if(opts.fill && !opts.fill.locked && e.target.matches('.fill-sel')) fillSet(e.target.dataset.fq, e.target.value); });
+
   /* ---------- quiz (D-101, D-103) ---------- */
   function quiz(){
     var ov=document.createElement('div'); ov.className='wsv-ov wsv-quiz'; root.appendChild(ov); V.overlay={close:function(){ clearInterval(qz.iv); ov.remove(); V.overlay=null; }};
@@ -791,6 +853,7 @@ WSV.mount = function(root, data, opts){
   root.addEventListener('click', function(e){
     if(V.pop && !e.target.closest('.wsv-pop') && !e.target.closest('[data-act="tools"],[data-act="note"]')) closePop();
     if(V.play && playClick(e)) return;
+    if(opts.fill && fillClick(e)) return;
     if(root.classList.contains('cover')){ var c=e.target.closest('.q,.psg'); if(c && !e.target.closest('[data-act]')){ c.classList.toggle('peek'); return; } }
     handleAct(e);
   });
@@ -843,6 +906,7 @@ WSV.mount = function(root, data, opts){
     V:V, render:render, gotoEx:gotoEx,
     setCur:function(id, scroll){ V.cur=id; pagesEl.querySelectorAll('.wsx').forEach(function(s){ s.classList.toggle('cur', s.dataset.ex===id); }); if(scroll) gotoEx(id); },
     setAnswers:function(on){ pagesEl.classList.toggle('show-ans', on); },
+    setFill:function(f){ opts.fill = f; render(true); },
     destroy:function(){ document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKeyUp); window.removeEventListener('blur', onBlur); if(ro) ro.disconnect(); if(player) player.close(); if(window.speechSynthesis) try{speechSynthesis.cancel();}catch(e){} },
     quiz:quiz, setPlay:setPlay, quickBoard:quickBoard, strokesCount:function(){ var n=0; Object.keys(V.store.strokes).forEach(function(k){ n+=V.store.strokes[k].length; }); return n; }
   };

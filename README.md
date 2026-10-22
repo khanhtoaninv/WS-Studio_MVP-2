@@ -40,9 +40,13 @@ Cấu hình trong `.env`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` (mặc định `cl
 
 ## Làm bài trên lớp
 
-Mở phiếu đã duyệt ở bản giáo viên, bấm **Làm bài trên lớp**, rồi **Bắt đầu phiên**. Màn hình hiện mã phiên 4 ký tự và địa chỉ cho học sinh (dạng `http://<máy giáo viên>:5173/lop?ma=XXXX`). Học sinh cùng Wi-Fi mở địa chỉ đó trên điện thoại hoặc máy tính, nhập tên, nhận mã cá nhân để vào lại nếu lỡ thoát. Bài làm tự lưu, nộp rồi không sửa được.
+Mở phiếu đã duyệt ở bản giáo viên, bấm **Làm bài trên lớp**, chọn giao diện học sinh làm bài (**Phiếu**, mặc định, hoặc **Quiz**), rồi **Bắt đầu phiên**. Màn hình hiện mã phiên 4 ký tự và địa chỉ cho học sinh (dạng `http://<máy giáo viên>:5173/lop?ma=XXXX`). Học sinh cùng Wi-Fi mở địa chỉ đó trên điện thoại hoặc máy tính, nhập tên, nhận mã cá nhân để vào lại nếu lỡ thoát. Bài làm tự lưu, nộp rồi không sửa được.
 
-Giáo viên thấy danh sách học sinh tự cập nhật, bấm vào từng em để xem bài từng câu kèm đáp án. Bảng xếp hạng, biểu đồ tỷ lệ đúng theo bài và các câu sai nhiều nhất cập nhật liên tục; **Kết thúc và tổng kết** khóa phiên, **Xuất ảnh báo cáo** tải một ảnh PNG.
+- **Phiếu**: học sinh thấy nguyên phiếu như bản giáo viên chiếu và làm ngay trên phiếu. Nộp xong, câu đúng tô xanh, câu sai tô đỏ, có điểm và nút xem bảng xếp hạng cả lớp. Giáo viên bấm một em để mở đúng phiếu bài làm của em (vẫn có bút, trình bày, bật đáp án, chuyển em trước/em sau).
+- **Quiz**: từng câu xếp dọc, nút bấm lớn, hợp điện thoại nhỏ. Giáo viên bấm một em để xem bảng từng câu kèm đáp án.
+- Thứ tự phương án trắc nghiệm, điền khuyết có lựa chọn và cột phải bài nối được đảo riêng cho từng em (hệ thống tự bỏ qua câu kiểu "All of the above"). Máy chủ đổi về thứ tự gốc trước khi chấm.
+
+Giáo viên thấy danh sách học sinh tự cập nhật. Bảng xếp hạng, biểu đồ tỷ lệ đúng theo bài và các câu sai nhiều nhất cập nhật liên tục; **Kết thúc và tổng kết** khóa phiên, **Xuất ảnh báo cáo** tải một ảnh PNG.
 
 - Chỉ chạy khi mở app qua máy chủ (`chay.bat`, `npm run dev`, `npm start`), không chạy khi mở tệp HTML bằng `file://`.
 - Đáp án chỉ nằm trên máy chủ; đề gửi cho học sinh không có đáp án, máy chủ chấm.

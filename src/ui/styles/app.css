@@ -466,3 +466,12 @@ textarea.inp{height:auto;padding:8px 10px;resize:vertical;line-height:1.45}
 .cls-ans tr.bad td:nth-child(2){color:var(--err)}
 .cls-ans td:nth-child(2){font-weight:700;width:24px}
 @media (max-width:900px){.cls-grid{grid-template-columns:1fr}}
+/* Làm bài trên lớp dạng Phiếu (D-131) */
+.cls-mode{border:1px solid var(--line);border-radius:10px;padding:10px 14px 12px;margin:12px 0;display:flex;flex-direction:column;gap:8px}
+.cls-mode legend{font-weight:600;padding:0 6px}
+.cls-opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.cls-opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.cls-opt input{margin-top:4px}
+.cls-sheet{position:fixed;inset:0;z-index:90;background:var(--paper);display:flex;flex-direction:column}
+.cls-sheet-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 14px;background:var(--paper);border-bottom:1px solid var(--line)}
+.cls-sheet-vw{flex:1;min-height:0}

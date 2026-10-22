@@ -13,11 +13,12 @@ header h1{font-size:16px;margin:0;flex:1;line-height:1.3}
 .me{font-size:13px;color:var(--ink-3);text-align:right}
 .me b{color:var(--ink)}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
-label{display:block;font-size:14px;color:var(--ink-2);margin:12px 0 4px}
+.qz label{display:block;font-size:14px;color:var(--ink-2);margin:12px 0 4px}
 input[type=text]{width:100%;font:inherit;padding:10px 12px;border:1px solid #C7CFDB;border-radius:8px;min-height:44px;background:#fff;color:var(--ink)}
-input[type=text]:focus,select:focus,button:focus-visible{outline:3px solid var(--accent-soft);border-color:var(--accent)}
+.qz input[type=text]:focus,.qz select:focus,.qz button:focus-visible{outline:3px solid var(--accent-soft);border-color:var(--accent)}
 .code{text-transform:uppercase;letter-spacing:4px;font-size:22px;font-weight:700}
-button{font:inherit;cursor:pointer;border-radius:8px;min-height:44px}
+button{font:inherit;cursor:pointer}
+.btn,.qz button{border-radius:8px;min-height:44px}
 .btn{background:var(--accent);color:#fff;border:0;padding:10px 18px;font-weight:600}
 .btn.ghost{background:none;color:var(--accent);border:1px solid var(--line)}
 .btn[disabled]{opacity:.5;cursor:default}
@@ -26,33 +27,49 @@ button{font:inherit;cursor:pointer;border-radius:8px;min-height:44px}
 .ex h2{font-size:17px;margin:0 0 4px}
 .ex .ins{color:var(--ink-2);margin:0 0 10px;font-size:15px}
 .passage{font-family:var(--serif);background:#FAFBFD;border-left:3px solid var(--line);padding:10px 12px;margin:0 0 12px;white-space:pre-wrap}
-.gap{display:inline-block;min-width:28px;text-align:center;font-family:var(--sans);font-weight:700;font-size:13px;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 4px}
+.qz .gap{display:inline-block;min-width:28px;text-align:center;font-family:var(--sans);font-weight:700;font-size:13px;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 4px}
 .bank{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
 .bank span{border:1px dashed #C7CFDB;border-radius:6px;padding:2px 8px;font-size:14px}
-.q{border-top:1px solid var(--line);padding:12px 0}
-.q:first-of-type{border-top:0}
-.qt{font-family:var(--serif);font-size:17px;margin-bottom:8px}
-.qn{font-family:var(--sans);font-weight:700;color:var(--ink-3);margin-right:6px}
-.opts{display:flex;flex-wrap:wrap;gap:8px}
-.opt{background:#fff;border:1px solid #C7CFDB;color:var(--ink);padding:8px 14px;min-width:56px;text-align:left}
-.opt.on{background:var(--accent);border-color:var(--accent);color:#fff}
-select{font:inherit;width:100%;min-height:44px;border:1px solid #C7CFDB;border-radius:8px;padding:8px;background:#fff;color:var(--ink)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{background:#fff;border:1px solid #C7CFDB;padding:6px 12px;min-height:40px}
-.chip.used{visibility:hidden}
-.built{min-height:44px;border:1px dashed #C7CFDB;border-radius:8px;padding:8px 12px;font-family:var(--serif);font-size:17px}
+.qz .q{border-top:1px solid var(--line);padding:12px 0}
+.qz .q:first-of-type{border-top:0}
+.qz .qt{font-family:var(--serif);font-size:17px;margin-bottom:8px}
+.qz .qn{font-family:var(--sans);font-weight:700;color:var(--ink-3);margin-right:6px}
+.qz .opts{display:flex;flex-wrap:wrap;gap:8px}
+.qz .opt{background:#fff;border:1px solid #C7CFDB;color:var(--ink);padding:8px 14px;min-width:56px;text-align:left}
+.qz .opt.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.qz select{font:inherit;width:100%;min-height:44px;border:1px solid #C7CFDB;border-radius:8px;padding:8px;background:#fff;color:var(--ink)}
+.qz .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.qz .chip{background:#fff;border:1px solid #C7CFDB;padding:6px 12px;min-height:40px}
+.qz .chip.used{visibility:hidden}
+.qz .built{min-height:44px;border:1px dashed #C7CFDB;border-radius:8px;padding:8px 12px;font-family:var(--serif);font-size:17px}
 .foot{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line)}
 .foot .wrap{display:flex;gap:12px;align-items:center;padding:10px 16px}
 .foot .st{flex:1;font-size:14px;color:var(--ink-3)}
 .res{text-align:center}
 .res .big{font-size:48px;font-weight:800;color:var(--accent);line-height:1.1}
-.mark{display:inline-block;width:22px;font-weight:800}
-.mark.ok{color:var(--ok)}.mark.bad{color:var(--err)}
-.q.ok{background:var(--ok-soft)}.q.bad{background:var(--err-soft)}
-.q.ok,.q.bad{border-radius:8px;padding:10px;margin:4px 0}
+.qz .mark{display:inline-block;width:22px;font-weight:800}
+.qz .mark.ok{color:var(--ok)}.qz .mark.bad{color:var(--err)}
+.qz .q.ok{background:var(--ok-soft)}.qz .q.bad{background:var(--err-soft)}
+.qz .q.ok,.qz .q.bad{border-radius:8px;padding:10px;margin:4px 0}
+/* dạng Phiếu (D-131): viewer phiếu chiếm giữa màn hình */
+.sheet{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.sheet #vw{flex:1;min-height:0}
+.sheet .foot{position:static}
+.score{font-weight:700;color:var(--ink)}
+.score b{color:var(--accent);font-size:18px}
+.rk-ov{position:fixed;inset:0;background:rgba(10,14,22,.5);display:grid;place-items:center;z-index:50;padding:16px}
+.rk-box{background:#fff;border-radius:12px;width:min(440px,100%);max-height:85vh;display:flex;flex-direction:column}
+.rk-box h2{margin:0;font-size:18px}
+.rk-head{padding:16px;border-bottom:1px solid var(--line)}
+.rk-list{overflow:auto;padding:6px 8px;margin:0;list-style:none}
+.rk-list li{display:flex;gap:10px;align-items:center;padding:8px;border-radius:8px}
+.rk-list li.me{background:var(--accent-soft);font-weight:700}
+.rk-list .n{width:28px;text-align:center;font-weight:800;color:var(--ink-3)}
+.rk-list .nm{flex:1}
+.rk-foot{padding:12px 16px;border-top:1px solid var(--line);text-align:right}
 </style></head>
 <body>
-<div id="app"></div>
+<div id="app" class="qz"></div>
 <script>
 (function(){
 var app = document.getElementById('app');
@@ -66,7 +83,7 @@ function api(path, body){
   return fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})
     .then(function(r){ return r.json().catch(function(){return {};}).then(function(d){ if(!r.ok) throw new Error(d.error||('Lỗi '+r.status)); return d; }); });
 }
-function apply(d){ st.session=d.session; st.studentCode=d.studentCode; st.name=d.name; st.paper=d.paper; st.answers=d.answers||{}; st.submittedAt=d.submittedAt; st.ended=d.ended; st.result=d.result; keep(); }
+function apply(d){ st.mode=d.mode||'quiz'; st.session=d.session; st.studentCode=d.studentCode; st.name=d.name; st.paper=d.paper; st.answers=d.answers||{}; st.submittedAt=d.submittedAt; st.ended=d.ended; st.result=d.result; keep(); }
 
 /* ---------- vào phiên ---------- */
 function joinView(){
@@ -134,12 +151,48 @@ function workView(){
 function resultView(){
   var r = st.result || {correct:0,total:0,pct:0,perQ:{}};
   app.innerHTML = headerHTML()+'<div class="wrap"><div class="card res"><div class="muted">'+(st.submittedAt?'Em đã nộp bài':'Phiên đã kết thúc')+'</div>'+
-    '<div class="big">'+r.correct+'/'+r.total+'</div><div>câu đúng ('+r.pct+'%)</div></div>'+
+    '<div class="big">'+r.correct+'/'+r.total+'</div><div>câu đúng ('+r.pct+'%)</div><div style="margin-top:12px"><button class="btn ghost" id="rank">Bảng xếp hạng lớp</button></div></div>'+
     st.paper.items.map(function(it){ return '<section class="card ex"><h2>Bài '+it.no+'. '+esc(it.title)+'</h2>'+it.questions.map(function(q,i){ var ok=r.perQ[q.id];
       var cls = ok===true?'ok':ok===false?'bad':''; return '<div class="q '+cls+'"><span class="mark '+cls+'">'+(ok===true?'✓':ok===false?'✕':'–')+'</span> Câu '+(i+1)+(ok==null?' <span class="muted">(bỏ trống)</span>':'')+'</div>'; }).join('')+'</section>'; }).join('')+
     '<div class="muted" style="text-align:center">Giáo viên sẽ chữa bài trên lớp.</div></div>';
 }
-function render(){ if(!st.paper) return joinView(); if(st.submittedAt || st.ended) return resultView(); workView(); }
+/* ---------- dạng Phiếu: làm ngay trên phiếu như bản giáo viên chiếu (D-131) ---------- */
+var vapi = null, viewerReady = null;
+function loadViewer(){
+  if(viewerReady) return viewerReady;
+  viewerReady = new Promise(function(ok, bad){
+    var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/lop/viewer.css'; document.head.appendChild(l);
+    var sc = document.createElement('script'); sc.src = '/lop/viewer.js'; sc.onload = ok; sc.onerror = function(){ viewerReady = null; bad(new Error('Không tải được phiếu. Tải lại trang.')); }; document.head.appendChild(sc);
+  });
+  return viewerReady;
+}
+function sheetView(){
+  var done = !!(st.submittedAt || st.ended), r = st.result || {correct:0,total:0,pct:0};
+  if(vapi){ vapi.destroy(); vapi = null; }
+  var c = counts();
+  app.innerHTML = '<div class="sheet">'+headerHTML()+'<div id="vw"><div class="wrap muted">Đang mở phiếu…</div></div><div class="foot"><div class="wrap">'+
+    (done ? '<div class="st score">'+(st.submittedAt?'Đã nộp':'Phiên đã kết thúc')+' · Đúng <b>'+r.correct+'/'+r.total+'</b> câu ('+r.pct+'%)</div><button class="btn" id="rank">Bảng xếp hạng</button>'
+      : '<div class="st" id="stt">Đã làm '+c.a+'/'+c.n+' câu · mã cá nhân <b>'+esc(st.studentCode)+'</b></div><button class="btn" id="sub">Nộp bài</button>')+
+    '</div></div></div>';
+  loadViewer().then(function(){
+    var el = document.getElementById('vw'); if(!el) return;
+    var data = { meta: Object.assign({}, st.paper.meta, { kind:'student' }), items: JSON.parse(JSON.stringify(st.paper.items)), qfb: null };
+    vapi = WSV.mount(el, data, { globalKeys:true, storageKey:'wsv:lop:'+st.session+':'+st.studentCode,
+      fill: { values: st.answers, locked: done, result: done ? st.result : null, onChange: function(qid, v){ set(qid, v); } } });
+  }).catch(function(e){ document.getElementById('vw').innerHTML = '<div class="wrap"><div class="err">'+esc(e.message)+'</div></div>'; });
+}
+function rankingView(){
+  api('/api/class/ranking', { code:st.session, studentCode:st.studentCode }).then(function(d){
+    var ov = document.createElement('div'); ov.className = 'rk-ov';
+    ov.innerHTML = '<div class="rk-box" role="dialog" aria-modal="true" aria-label="Bảng xếp hạng lớp"><div class="rk-head"><h2>Bảng xếp hạng lớp</h2><div class="muted">Em xếp hạng <b>'+esc(d.me||'–')+'</b> / '+d.students+' bạn · '+d.submitted+' bạn đã nộp · trung bình lớp '+d.avg+'%</div></div>'+
+      '<ol class="rk-list">'+d.ranking.map(function(x){ return '<li class="'+(x.me?'me':'')+'"><span class="n">'+x.rank+'</span><span class="nm">'+esc(x.name)+(x.me?' (em)':'')+(x.submitted?'':' <span class="muted">· đang làm</span>')+'</span><b>'+x.correct+'/'+x.total+'</b><span class="muted">'+x.pct+'%</span></li>'; }).join('')+'</ol>'+
+      '<div class="rk-foot"><button class="btn ghost" id="rkx">Đóng</button> <button class="btn" id="rkr">Cập nhật</button></div></div>';
+    document.body.appendChild(ov);
+    var me = ov.querySelector('li.me'); if(me) me.scrollIntoView({block:'center'});
+    ov.addEventListener('click', function(e){ if(e.target===ov || e.target.id==='rkx'){ ov.remove(); } else if(e.target.id==='rkr'){ ov.remove(); rankingView(); } });
+  }).catch(function(e){ alert(e.message); });
+}
+function render(){ app.className = st.paper && st.mode==='sheet' ? '' : 'qz'; if(!st.paper) return joinView(); if(st.mode==='sheet') return sheetView(); if(st.submittedAt || st.ended) return resultView(); workView(); }
 
 /* ---------- lưu ---------- */
 var pending = {}, timer = null;
@@ -152,6 +205,8 @@ function flush(submit){
 }
 function set(qid, v){ st.answers[qid]=v; pending[qid]=v; var c=counts(); status('Đã làm '+c.a+'/'+c.n+' câu · đang lưu…'); clearTimeout(timer); timer=setTimeout(function(){ flush(false); }, 700); }
 app.addEventListener('click', function(e){
+  if(e.target.id==='rank'){ rankingView(); return; }
+  if(st.mode==='sheet' && e.target.id!=='sub') return;      // dạng Phiếu: viewer tự xử lý thao tác trên phiếu
   var o = e.target.closest('.opt');
   if(o){ var it=findItem(o.dataset.q); var v=o.dataset.v; if(it&&it.type==='tfng') v=['T','F','NG'][+v]; set(o.dataset.q, v); var sc=window.scrollY; workView(); window.scrollTo(0,sc); return; }
   var w = e.target.closest('[data-ord]');
@@ -162,8 +217,8 @@ app.addEventListener('click', function(e){
   if(e.target.id==='sub'){ var c=counts(); if(c.a<c.n && !confirm('Em mới làm '+c.a+'/'+c.n+' câu. Vẫn nộp bài?')) return; if(c.a===c.n && !confirm('Nộp bài? Nộp rồi không sửa được.')) return;
     e.target.disabled=true; flush(true); }
 });
-app.addEventListener('input', function(e){ if(e.target.matches('input[data-q]')) set(e.target.dataset.q, e.target.value); });
-app.addEventListener('change', function(e){ if(e.target.matches('select[data-q]')) set(e.target.dataset.q, e.target.value); });
+app.addEventListener('input', function(e){ if(st.mode!=='sheet' && e.target.matches('input[data-q]')) set(e.target.dataset.q, e.target.value); });
+app.addEventListener('change', function(e){ if(st.mode!=='sheet' && e.target.matches('select[data-q]')) set(e.target.dataset.q, e.target.value); });
 function findItem(qid){ var r=null; st.paper.items.forEach(function(it){ it.questions.forEach(function(q){ if(q.id===qid) r=it; }); }); return r; }
 function findQ(qid){ var r=null; st.paper.items.forEach(function(it){ it.questions.forEach(function(q){ if(q.id===qid) r=q; }); }); return r; }
 

@@ -70,6 +70,12 @@ const STUDENT = path.join(root, 'server', 'student.html');
 
 const server = http.createServer((req, res) => {
   if(req.url.startsWith('/api/')) return api(req, res);
+  /* Viewer phiếu dùng chung cho trang học sinh dạng Phiếu (D-131) */
+  const vf = req.method === 'GET' && { '/lop/viewer.js': ['viewer.js', 'text/javascript'], '/lop/viewer.css': ['viewer.css', 'text/css'] }[req.url.split('?')[0]];
+  if(vf){
+    res.writeHead(200, { 'content-type': vf[1] + '; charset=utf-8', 'cache-control': 'no-cache' });
+    return fs.createReadStream(path.join(root, 'src', 'viewer', vf[0])).pipe(res);
+  }
   if(req.method === 'GET' && /^\/lop(\/|\?|$)/.test(req.url)){
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
     return fs.createReadStream(STUDENT).pipe(res);

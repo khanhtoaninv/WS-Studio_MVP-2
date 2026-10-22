@@ -8,7 +8,7 @@ async function post(path, body){
 }
 export const httpClassroomService = {
   kind: 'lan',
-  start: (data) => post('/api/class/sessions', { data }),
+  start: (data, mode) => post('/api/class/sessions', { data, mode }),
   state: (s) => post('/api/class/state', s),
   end: (s) => post('/api/class/end', s),
   reopen: (s) => post('/api/class/reopen', s),

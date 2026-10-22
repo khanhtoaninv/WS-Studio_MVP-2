@@ -113,6 +113,27 @@
 .ord .used{opacity:.3}
 .ord-built{font-family:var(--sansc);font-size:13.5px;color:#1F46A8;min-height:20px}
 .play-sel{font-family:var(--sansc);font-size:13px;margin-left:6px}
+/* làm bài trên lớp, dạng Phiếu (D-131) */
+.fq .opt,.fq .tfbox span,.fq .ord span{cursor:pointer}
+.fq:not(.locked) .opt:hover,.fq:not(.locked) .tfbox span:hover{background:#E6EDFB}
+.fq.locked .opt,.fq.locked .tfbox span,.fq.locked .ord span{cursor:default}
+.fq .tfbox span.picked{background:#2741B0;color:#fff;border-color:#2741B0;outline:none}
+.fq .opt.picked{background:#E6EDFB}
+.fill-inp{font:inherit;font-size:15px;color:#1F46A8;border:0;background:transparent;padding:0 4px;width:120px;text-align:center;outline:none;min-height:24px}
+.fill-inp.wide{width:100%;text-align:left;border-bottom:1px solid #9AA3B2}
+.fill-inp:focus{background:#F1F5FF}
+.fill-sel{font-family:var(--sansc);font-size:14px;border:0;background:transparent;color:#1F46A8;font-weight:700;cursor:pointer}
+.blank.fblank{min-width:120px}
+.ord-line{position:relative;display:flex;align-items:flex-end;gap:6px;font-size:15px;color:#1F46A8}
+.ord-clr{border:1px solid #C9D7F6;background:#fff;border-radius:5px;font-size:12px;cursor:pointer;margin-left:auto;margin-bottom:2px}
+.fq.res-ok .opt.picked,.fq.res-ok .tfbox span.picked{background:#1E8A4C;color:#fff;border-color:#1E8A4C;outline:none}
+.fq.res-no .opt.picked,.fq.res-no .tfbox span.picked{background:#C23A2B;color:#fff;border-color:#C23A2B;outline:none}
+.fq.res-ok .fill-inp,.fq.res-ok .fill-sel,.fq.res-ok .ord-txt{color:#0F6B37;font-weight:700}
+.fq.res-no .fill-inp,.fq.res-no .fill-sel,.fq.res-no .ord-txt{color:#B42318;font-weight:700}
+.fq.res-ok .qn{color:#fff;background:#1E8A4C;border-radius:50%;text-align:center;height:20px}
+.fq.res-no .qn,.fq.res-none .qn{color:#fff;background:#C23A2B;border-radius:50%;text-align:center;height:20px}
+.fq.res-none{background:#FDE7E4;border-radius:6px}
+.fq.res-none .qb::after{content:"Bỏ trống";font-family:var(--sansc);font-size:11px;color:#B42318;margin-left:6px}
 /* overlays */
 .wsv-ov{position:absolute;inset:0;z-index:40}
 .wsv-light{background:rgba(10,14,22,.82);display:grid;place-items:center}
