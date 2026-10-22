@@ -15,6 +15,39 @@ function stepBar(w){
     <span class="step-sep" aria-hidden="true"></span><span class="step" style="cursor:default"><span class="n">5</span>Biên tập</span><span class="step-sep" aria-hidden="true"></span><span class="step" style="cursor:default"><span class="n">6</span>Duyệt cấp 1</span></nav>`;
 }
 const cfgLessons = c => [c.lessonId].concat(c.multi?c.extra.filter(x=>x!==c.lessonId):[]).filter(Boolean);
+/* D-133: số trang đo bằng chính viewer trên phiếu nháp dựng từ khối bài, cùng thước đo với Preview */
+const measureCache = {sig:null, m:null};
+function measurePlan(w){
+  const c = w.cfg; const sig = JSON.stringify([cfgLessons(c), c.themeId, c.pages, c.title, w.blocks.map(b=>[b.type,b.count,b.difficulty,b.layout,b.fromLib,b.note,b.explanations])]);
+  if(measureCache.sig===sig) return measureCache.m;
+  const m = window.WSV.measure(WS.EX.sampleData({title:c.title, lessonIds:cfgLessons(c), themeId:c.themeId, pages:c.pages}, w.blocks));
+  measureCache.sig = sig; measureCache.m = m; return m;
+}
+WS.measurePlan = measurePlan;
+/* Dàn nhanh bằng ước tính (AI.planBlocks) rồi chỉnh số câu theo số đo thật cho tới khi lấp 90–100% số trang */
+function fitPlan(w){
+  const lesson = Q.lesson(w.cfg.lessonId); const target = w.cfg.pages; let last = ''; w.short = false;
+  for(let k=0;k<24;k++){
+    const m = measurePlan(w);
+    if(m.pages > target){
+      const cands = w.blocks.filter(b=>!b.fromLib && b.count>Q.standard(b.type).minQ);
+      if(cands.length){ cands.sort((a,b)=>b.count-a.count)[0].count--; last='dec'; continue; }
+      if(w.blocks.length>1){ w.blocks.pop(); last='dec'; continue; }
+      break;
+    }
+    if(m.fill < target*0.9 && last!=='dec'){
+      const cands = w.blocks.filter(b=>!b.fromLib && b.count<Math.min(Q.standard(b.type).maxQ, AI.available(lesson,b.type).max));
+      if(!cands.length){ w.short = true; break; }
+      cands.sort((a,b)=>a.count-b.count)[0].count++; last='inc'; continue;
+    }
+    break;
+  }
+}
+/* Sơ đồ trang: mỗi trang A4 một ô, các bài xếp theo chiều cao thật */
+function pageMap(m){
+  const L = window.WSV.PAGE_LIMIT;
+  return `<div class="page-map" role="img" aria-label="Sơ đồ ${m.pages} trang">${m.map.map((p,pi)=>`<div class="pm-page${p.h>L?' tall':''}"><div class="pm-head" style="height:${pi===0?Math.round((p.h-p.segs.reduce((a,s)=>a+s.h,0))/L*100):0}%"></div>${p.segs.map(sg=>`<div class="pm-seg" style="height:${Math.max(4,Math.round(sg.h/L*100))}%" title="Bài ${sg.idx+1}">${sg.idx+1}</div>`).join('')}<span class="pm-no">Trang ${pi+1}</span></div>`).join('')}</div>`;
+}
 function scopeCard(c){
   const x = c.lessonId && Q.lessonCtx(c.lessonId); const th = c.themeId && Q.theme(c.themeId);
   if(!x) return `<aside class="card"><h3>Phạm vi cho phép</h3>${UI.empty('Chưa chọn lesson','Chọn lần lượt Giáo trình → Level → Unit → Lesson.')}</aside>`;
@@ -85,11 +118,10 @@ function blockProblems(b, lesson){
   return '';
 }
 function fillBar(w){
-  const lesson=Q.lesson(w.cfg.lessonId); const h=AI.blocksHeight(w.blocks.filter(b=>!b.fromLib), lesson.id) + w.blocks.filter(b=>b.fromLib).length*260;
-  const ratio=h/(w.cfg.pages*AI.PAGE_H); const pct=Math.round(ratio*100);
-  return `<div class="card" style="padding:12px 16px"><div class="row small"><b>Mức lấp ${w.cfg.pages} trang A4: ${pct}%</b><span class="muted">Mục tiêu 92–100%. Ước tính theo chiều cao thực của viewer.</span><span class="spacer"></span>${UI.btn('↻ Dàn bộ khác',{a:'wzReplan', size:'sm'})}</div>
-    <div class="fill" style="margin-top:8px" role="img" aria-label="Mức lấp ${pct}%"><span style="width:${Math.min(100,pct)}%;background:${pct>104?'var(--warn)':pct<90?'var(--bar-dr)':'var(--ok)'}"></span><i class="mark" style="left:92%"></i><i class="mark" style="left:99.5%"></i></div>
-    ${pct<90?`<div class="small" style="color:var(--warn);margin-top:6px">${w.short?'Dữ liệu lesson không đủ để lấp hết số trang; hệ thống không bơm nội dung ngoài phạm vi.':'Phiếu còn thiếu so với số trang đã chọn. Thêm khối hoặc tăng số câu.'}</div>`:pct>104?'<div class="small" style="color:var(--warn);margin-top:6px">Phiếu có thể dài hơn số trang đã chọn; bước Bố cục sẽ gợi ý cách thu gọn.</div>':''}</div>`;
+  const m = measurePlan(w); const ratio = m.fill/w.cfg.pages; const pct = Math.round(ratio*100);
+  return `<div class="card" style="padding:12px 16px"><div class="row small"><b>Mức lấp ${w.cfg.pages} trang A4: ${pct}%</b><span class="muted">Mục tiêu 90–100%. Đo bằng viewer trên phiếu nháp, cùng cách Preview đếm trang.</span><span class="spacer"></span>${UI.btn('↻ Dàn bộ khác',{a:'wzReplan', size:'sm'})}</div>
+    <div class="fill" style="margin-top:8px" role="img" aria-label="Mức lấp ${pct}%"><span style="width:${Math.min(100,pct)}%;background:${m.pages>w.cfg.pages?'var(--warn)':pct<90?'var(--bar-dr)':'var(--ok)'}"></span><i class="mark" style="left:90%"></i><i class="mark" style="left:99.5%"></i></div>
+    ${pct<90?`<div class="small" style="color:var(--warn);margin-top:6px">${w.short?'Dữ liệu lesson không đủ để lấp hết số trang; hệ thống không bơm nội dung ngoài phạm vi.':'Phiếu còn thiếu so với số trang đã chọn. Thêm khối hoặc tăng số câu.'}</div>`:m.pages>w.cfg.pages?`<div class="small" style="color:var(--warn);margin-top:6px">Phiếu đang dài ${m.pages} trang, hơn số trang đã chọn; bước Bố cục sẽ gợi ý cách thu gọn.</div>`:''}</div>`;
 }
 function step2(w){
   const lesson = Q.lesson(w.cfg.lessonId);
@@ -115,24 +147,24 @@ function step2(w){
     ${unusable.length?`<div class="small muted">Không sinh được ở lesson này: ${unusable.map(t=>`<span data-tip="${esc(AI.available(lesson,t).reason)}" style="border-bottom:1px dotted">${esc(WS.TYPES[t].label)}</span>`).join(', ')}.</div>`:''}
     <div class="wiz-foot">${UI.btn('← Thông tin & phạm vi',{a:'wzGo', kind:'ghost', data:{s:1}})}<span class="spacer"></span>${reason?`<span class="why">${esc(reason)}</span>`:''}${UI.btn('Tiếp: Bố cục →',{a:'wzNext', kind:'primary', disabled:!!reason, reason})}</div></div>`;
 }
-function planNow(w){ const r = AI.planBlocks(w.cfg.lessonId, w.cfg.pages, w.salt); w.blocks = r.blocks; w.short = r.short; }
+function planNow(w){ const r = AI.planBlocks(w.cfg.lessonId, w.cfg.pages, w.salt); w.blocks = r.blocks; fitPlan(w); }
 
 /* ---------- step 3 ---------- */
 function step3(w){
   const lesson = Q.lesson(w.cfg.lessonId);
-  const est = w.blocks.map(b=>{ if(b.fromLib){ const ex=Q.ex(b.fromLib); return AI.estimateHeight(ex.type, ex.draft, ex.draft.layout); } return AI.estimateHeight(b.type, {questions:new Array(b.count).fill(0), passage:['tfng','cloze_mcq','short_answer'].includes(b.type)?lesson.passages[0]:'', wordBank:b.type==='fill_blank'&&b.difficulty!=='hard'?[1]:[], media:b.layout==='L2'?['x']:[]}, b.layout); });
-  const total = est.reduce((a,b)=>a+b,0); const pages = total/AI.PAGE_H; const over = pages > w.cfg.pages*1.02;
+  const m = measurePlan(w); const L = window.WSV.PAGE_LIMIT;
+  const est = w.blocks.map((b,i)=>(m.items[i]||{h:0}).h); const pages = m.fill; const over = m.pages > w.cfg.pages;
   const sugg = [];
-  if(over){ w.blocks.forEach((b,i)=>{ if(!b.fromLib && b.layout==='L1' && ['fill_blank','word_form','mcq','tfng'].includes(b.type) && b.count>=4) sugg.push({k:'l4', i, t:`Chuyển Bài ${i+1} (${WS.TYPES[b.type].label}) sang hai cột`}); if(!b.fromLib && b.count>Q.standard(b.type).minQ) sugg.push({k:'less', i, t:`Bớt 1 câu ở Bài ${i+1} (còn ${b.count-1}, tối thiểu ${Q.standard(b.type).minQ})`}); }); sugg.push({k:'pages', t:`Tăng số trang lên ${Math.ceil(pages)}`}); }
+  if(over){ w.blocks.forEach((b,i)=>{ if(!b.fromLib && b.layout==='L1' && ['fill_blank','word_form','mcq','tfng'].includes(b.type) && b.count>=4) sugg.push({k:'l4', i, t:`Chuyển Bài ${i+1} (${WS.TYPES[b.type].label}) sang hai cột`}); if(!b.fromLib && b.count>Q.standard(b.type).minQ) sugg.push({k:'less', i, t:`Bớt 1 câu ở Bài ${i+1} (còn ${b.count-1}, tối thiểu ${Q.standard(b.type).minQ})`}); }); sugg.push({k:'pages', t:`Tăng số trang lên ${m.pages}`}); }
   const rows = w.blocks.map((b,i)=>{
     const type = b.fromLib?Q.ex(b.fromLib).type:b.type; const sug = b.fromLib?{layout:Q.ex(b.fromLib).draft.layout, reason:'Giữ bố cục của bài trong kho.'}:AI.suggestLayout(type, {questions:new Array(b.count).fill(0), passage:['tfng','cloze_mcq','short_answer'].includes(type)?lesson.passages[0]:''}, false);
     return `<div class="block-row" style="grid-template-columns:28px 1.2fr auto 110px"><b class="muted">${i+1}</b><span>${UI.typeChip(type)} <span class="small muted">${b.fromLib?'từ kho':b.count+' câu'}</span><div class="small muted" style="margin-top:3px">Gợi ý ${sug.layout}: ${esc(sug.reason)}${b.layout==='L2'?' Bố cục cột ảnh sẽ được tạo sẵn một ảnh minh họa.':''}</div></span>
       <span class="layout-pick" role="radiogroup" aria-label="Bố cục bài ${i+1}">${['L1','L2','L3','L4'].map(L=>`<button class="lay ${b.layout===L?'on':''}" data-a="wzLay" data-i="${i}" data-l="${L}" role="radio" aria-checked="${b.layout===L}" title="${esc(Q.layout(L).name)}">${UI.layIcon(L)}${L}${sug.layout===L?' ★':''}</button>`).join('')}</span>
-      <span class="small muted" style="text-align:right">≈ ${(est[i]/AI.PAGE_H).toFixed(2)} trang</span></div>`;
+      <span class="small muted" style="text-align:right">≈ ${(est[i]/L).toFixed(2)} trang${m.items[i]&&m.items[i].pages.length?`<br>trang ${m.items[i].pages.map(p=>p+1).join('–')}`:''}</span></div>`;
   }).join('');
   const stds = [...new Set(w.blocks.map(b=>{ const t=b.fromLib?Q.ex(b.fromLib).type:b.type; const s=Q.standard(t); return `${s.id} v${s.version}`; }))];
   const th = w.cfg.themeId && Q.theme(w.cfg.themeId);
-  return `<div class="stack"><div class="card" style="padding:12px 16px"><div class="row"><b>Ước tính ${pages.toFixed(1)} / ${w.cfg.pages} trang A4</b><span class="spacer"></span>${over?UI.chip('Dài hơn mục tiêu','orange'):UI.chip('Vừa số trang','green')}</div>
+  return `<div class="stack"><div class="card" style="padding:12px 16px"><div class="row"><b>Ước tính ${pages.toFixed(1)} / ${w.cfg.pages} trang A4</b><span class="small muted">Đo bằng viewer, khớp số trang ở Preview.</span><span class="spacer"></span>${over?UI.chip(`Dài hơn mục tiêu: ${m.pages} trang`,'orange'):UI.chip('Vừa số trang','green')}</div>${pageMap(m)}
       ${over?`<div class="stack" style="margin-top:10px">${sugg.slice(0,5).map((s,k)=>`<div class="row small"><span>• ${esc(s.t)}</span><span class="spacer"></span>${UI.btn('Áp dụng',{a:'wzSugg', size:'xs', data:{k:s.k, i:s.i==null?'':s.i}})}</div>`).join('')}</div>`:''}</div>
     <h3>Bố cục từng bài</h3><div class="stack">${rows}</div>
     <div class="card"><h3>Tóm tắt trước khi sinh</h3><dl class="kv"><dt>Phạm vi</dt><dd>${esc(Q.lessonLabel(w.cfg.lessonId))}${w.cfg.multi&&w.cfg.extra.length?` + ${w.cfg.extra.length} lesson`:''}</dd><dt>Theme</dt><dd>${th?`${th.emoji} ${esc(th.name)}`:'Không dùng theme'}</dd>
@@ -148,7 +180,7 @@ function step4(w){
   const ws = Q.ws(w.wsId);
   return `<div class="stack"><div class="card" style="padding:12px 16px"><div class="row"><b>${g.done?'Đã sinh xong':'Đang sinh phiếu'} "${esc(ws.title)}"</b><span class="spacer"></span>
       ${g.done?UI.btn('Mở trình soạn →',{a:'go', kind:'primary', data:{href:'#/phieu/'+ws.id}}):UI.btn('Chạy nền và rời màn hình',{a:'wzBg', kind:'ghost'})}</div>
-      <div class="small muted">${g.done?`${g.blocks.filter(b=>b.status==='ok'||b.status==='fixed').length}/${g.blocks.length} bài đạt kiểm tra. Bài không đạt vẫn được tạo ở trạng thái Nháp kèm lý do.`:'Bạn có thể rời màn hình; khi xong sẽ có thông báo.'}</div></div>
+      <div class="small muted">${g.done?`${g.blocks.filter(b=>b.status==='ok'||b.status==='fixed').length}/${g.blocks.length} bài đạt kiểm tra. Bài không đạt vẫn được tạo ở trạng thái Nháp kèm lý do. <span class="gen-pages">Phiếu thật dài ${g.measure.fill.toFixed(1)} trang (${g.measure.pages}/${ws.pages} trang A4${g.measure.pages>ws.pages?', dài hơn mục tiêu: xem gợi ý ở Preview':''}).</span>`:'Bạn có thể rời màn hình; khi xong sẽ có thông báo.'}</div></div>
     <div class="prog-list" aria-live="polite">${g.blocks.map((b,i)=>`<div class="prog-item"><div class="row"><b>Bài ${i+1} · ${esc(WS.TYPES[b.type].label)}</b><span class="muted small">${b.count?b.count+' câu':''}</span><span class="spacer"></span>
       ${{wait:UI.chip('Đang chờ','grey'), run:UI.chip('Đang sinh','blue'), ok:UI.chip('Hoàn tất','green','✓'), fixed:UI.chip('Hoàn tất sau tự sửa','yellow','✓'), fail:UI.chip('Không đạt','red','✕')}[b.status]}</div>
       <div class="prog-steps">${STEP_NAMES.map((s,k)=>`<span class="ps ${b.steps[k]||''}">${s}</span>`).join('')}</div>
@@ -196,9 +228,11 @@ WS.runGeneration = async (wsId, blocks, cfg) => {
       WS.audit(fault!=='off'?`Sinh bài (ép lỗi: ${fault})`:'Sinh bài (AI giả lập)','exercise',ex.id,{note:st.log.join(' ')});
     });
   }
+  run.measure = window.WSV.measure(WS.EX.viewerData(ws, 'teacher', {useDraft:true}));
   run.done = true;
   S.commit(()=>{ WS.audit('Hoàn tất sinh phiếu','worksheet',wsId); WS.notify(ws.authorId, `Đã sinh xong phiếu "${ws.title}" (${run.blocks.filter(b=>b.status!=='fail').length}/${run.blocks.length} bài đạt kiểm tra).`, '#/phieu/'+wsId); });
   if(WS.App.route.name!=='wizard') UI.toast(`Đã sinh xong phiếu "${ws.title}".`, {action:{label:'Mở', fn:()=>location.hash='#/phieu/'+wsId}});
+  if(run.measure.pages > ws.pages) UI.toast(`Phiếu sinh ra dài ${run.measure.pages} trang, hơn mục tiêu ${ws.pages}. Bấm huy hiệu cam ở Preview để xem gợi ý thu gọn.`);
 };
 
 /* ---------- actions ---------- */
@@ -223,7 +257,7 @@ Object.assign(WS.ACT, {
   wzMv: el => { const w=wiz(), i=+el.dataset.i, j=i+(+el.dataset.d); if(j<0||j>=w.blocks.length) return; [w.blocks[i],w.blocks[j]]=[w.blocks[j],w.blocks[i]]; w.manual=true; rer(); },
   wzDel: el => { const w=wiz(); w.blocks.splice(+el.dataset.i,1); w.manual=true; rer(); },
   wzLay: el => { const b=wiz().blocks[+el.dataset.i]; b.layout=el.dataset.l; rer(); },
-  wzSugg: el => { const w=wiz(); const k=el.dataset.k, i=el.dataset.i===''?null:+el.dataset.i; if(k==='l4') w.blocks[i].layout='L4'; if(k==='less') w.blocks[i].count--; if(k==='pages') w.cfg.pages=Math.ceil(AI.blocksHeight(w.blocks,w.cfg.lessonId)/AI.PAGE_H); rer(); UI.toast('Đã áp dụng gợi ý.'); },
+  wzSugg: el => { const w=wiz(); const k=el.dataset.k, i=el.dataset.i===''?null:+el.dataset.i; if(k==='l4') w.blocks[i].layout='L4'; if(k==='less') w.blocks[i].count--; if(k==='pages') w.cfg.pages=measurePlan(w).pages; rer(); UI.toast('Đã áp dụng gợi ý.'); },
   wzFromLib: () => { const w=wiz(); const list = S.state.exercises.filter(e=>e.status==='active' && R.lastDone(e) && e.scope.unitId===w.cfg.unitId);
     UI.modal({title:'Thêm từ kho bài', sub:'Chỉ liệt kê bài đã có bản Done trong cùng unit.', wide:true, body: list.length?`<div class="tbl-wrap"><table class="tbl"><tbody>${list.map(e=>`<tr><td>${UI.typeChip(e.type)}</td><td><b>${esc(e.draft.title)}</b><div class="small muted">${esc(Q.lessonShort(e.scope.lessonIds[0]))} · ${esc(Q.user(e.ownerId).name)}</div></td><td>${UI.exChip(e)}</td><td><button class="btn sm" data-pick="${e.id}">Thêm</button></td></tr>`).join('')}</tbody></table></div>`:UI.empty('Không có bài Done nào trong unit này',''), buttons:[{label:'Đóng', kind:'ghost'}],
       onMount:(m,close)=>m.addEventListener('click',e=>{ const b=e.target.closest('[data-pick]'); if(!b) return; w.blocks.push({id:U.uid('b'), fromLib:b.dataset.pick, layout:Q.ex(b.dataset.pick).draft.layout}); w.manual=true; close(); rer(); })}); },

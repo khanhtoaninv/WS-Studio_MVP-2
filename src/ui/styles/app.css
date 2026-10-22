@@ -475,3 +475,10 @@ textarea.inp{height:auto;padding:8px 10px;resize:vertical;line-height:1.45}
 .cls-sheet{position:fixed;inset:0;z-index:90;background:var(--paper);display:flex;flex-direction:column}
 .cls-sheet-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 14px;background:var(--paper);border-bottom:1px solid var(--line)}
 .cls-sheet-vw{flex:1;min-height:0}
+/* D-133: sơ đồ trang ở bước Bố cục */
+.page-map{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.pm-page{position:relative;width:64px;height:90px;border:1px solid var(--line-2);border-radius:3px;background:var(--paper);display:flex;flex-direction:column;padding:3px;gap:2px;overflow:hidden}
+.pm-page.tall{border-color:var(--warn)}
+.pm-head{flex:none;background:var(--surface-2);border-radius:2px}
+.pm-seg{flex:none;background:var(--accent-soft);color:var(--accent-2);border-radius:2px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;min-height:4px;overflow:hidden}
+.pm-no{position:absolute;bottom:-1px;right:3px;font-size:9px;color:var(--ink-3)}

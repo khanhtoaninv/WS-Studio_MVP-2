@@ -243,13 +243,14 @@ WSV.sheetHead = function(d){
 };
 
 /* pagination using real measurement */
+WSV.PAGE_LIMIT = 1123-56-60-26;
 WSV.paginate = function(root, d, opts){
   var meas = document.createElement('div');
   meas.className = 'wsv'+(opts.compact?' compact':''); meas.style.cssText='position:absolute;left:-30000px;top:0;width:794px;height:auto;visibility:hidden;display:block';
   meas.innerHTML = '<div class="wsv-content" style="position:relative;inset:auto;width:794px"></div>';
   document.body.appendChild(meas);
   var box = meas.firstChild;
-  var LIMIT = 1123-56-60-26;
+  var LIMIT = WSV.PAGE_LIMIT;
   box.innerHTML = WSV.sheetHead(d); var headH = box.offsetHeight;
   var all = [];
   d.items.forEach(function(it, idx){
@@ -270,6 +271,27 @@ WSV.paginate = function(root, d, opts){
     p.units.push(u); p.h += add; if(p.h > LIMIT) p.tall = true;
   });
   return pages;
+};
+/* Chia trang có tự thu gọn (D-87): phiếu dài hơn số trang mục tiêu thì bài dài một cột chuyển sang hai cột */
+WSV.layoutPages = function(root, d, o, noCompact){
+  var pages = WSV.paginate(root, d, o);
+  var target = d.meta.pagesTarget;
+  if(target && pages.length > target && !noCompact){
+    d.items.forEach(function(it){ if(!it._lay && (it.questions||[]).length>=4 && ['mcq','fill_blank','word_form','tfng'].indexOf(it.type)>=0 && WSV.effLayout(it)==='L1') it._lay='L4'; });
+    pages = WSV.paginate(root, d, o);
+  }
+  return pages;
+};
+/* D-133: thước đo trang duy nhất, dùng chung cho wizard, Preview và viewer.
+   fill = số trang tính lẻ (trang cuối tính theo phần đã dùng); items[i] = chiều cao và các trang bài i chiếm */
+WSV.measure = function(d, o){
+  o = o || {};
+  var pages = WSV.layoutPages(null, d, {teacher:d.meta.kind==='teacher', mini:true}, o.noCompact);
+  var L = WSV.PAGE_LIMIT, items = d.items.map(function(){ return {h:0, pages:[]}; });
+  pages.forEach(function(p, pi){ var prev = null; p.units.forEach(function(u){ var it = items[u.idx]; it.h += u.h + (prev!==u.ex ? 20 : 0); if(it.pages.indexOf(pi)<0) it.pages.push(pi); prev = u.ex; }); });
+  var last = pages[pages.length-1];
+  return {pages:pages.length, fill:(pages.length-1) + Math.min(1, last.h/L), tall:pages.some(function(p){ return p.tall; }),
+    items:items, map:pages.map(function(p){ var segs = []; p.units.forEach(function(u){ var sg = segs[segs.length-1]; if(sg && sg.idx===u.idx) sg.h += u.h; else segs.push({idx:u.idx, h:u.h + 20}); }); return {h:p.h, segs:segs}; })};
 };
 WSV.pageHTML = function(d, page, pi, total, opts){
   var h = pi===0 ? WSV.sheetHead(d) : '';
@@ -330,13 +352,8 @@ WSV.mount = function(root, data, opts){
     var o = {teacher:T, mini:opts.mini, mediaFail:data.mediaFail && !V.retried, retried:V.retried, pinned:V.store.pins, cur:V.cur};
     FILL = opts.fill || null;
     try {
-      var pages = WSV.paginate(root, data, o);
+      var pages = WSV.layoutPages(root, data, o, opts.noCompact);
       var target = data.meta.pagesTarget;
-      if(target && pages.length > target && !opts.noCompact){
-        // D-87: try compaction, then L4 for long blocks
-        data.items.forEach(function(it){ if(!it._lay && (it.questions||[]).length>=4 && ['mcq','fill_blank','word_form','tfng'].indexOf(it.type)>=0 && WSV.effLayout(it)==='L1') it._lay='L4'; });
-        pages = WSV.paginate(root, data, o);
-      }
     } finally { FILL = null; }
     V.pages = pages; V.s = computeScale();
     pagesEl.innerHTML = pages.map(function(p, i){

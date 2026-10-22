@@ -1,7 +1,7 @@
 # ĐẶC TẢ MVP PROTOTYPE — ws-studio
 
 > Mã tài liệu: **WSS-MVP-SPEC**
-> Phiên bản: **3.9** · Ngày: **22/10/2026**
+> Phiên bản: **4.0** · Ngày: **22/10/2026**
 > Kế thừa từ: **EAA-PRD v0.5** (đặc tả sản phẩm đầy đủ). Tài liệu này **thu hẹp và cụ thể hóa** PRD cho một bản prototype chạy hoàn toàn bằng HTML.
 > Ngôn ngữ tài liệu và giao diện: **Tiếng Việt**. Nội dung bài tập mẫu: **Tiếng Anh**.
 > Trạng thái: **Đã build (mã nguồn `ws-studio/`, 259 kiểm tra tự động đạt); các mục còn mở nằm ở mục 19A và mục 20**
@@ -257,6 +257,7 @@ Các đoạn dưới giữ tên gọi cũ: **Cấu hình phiếu** = bước 1 v
 - Thời lượng mục tiêu của phiếu (phút), số bài mong muốn (không bắt buộc): dùng làm căn cứ đề xuất bố cục.
 
 **Bước 3 — Bố cục** (D-80); **Bước 4 — Sinh** là màn tiến trình theo từng bài ở cuối bước này
+- Số trang ở bước Khối bài và Bố cục được đo bằng chính viewer trên phiếu nháp, khớp số trang ở Preview; có sơ đồ trang (D-133).
 - Bấm **Đề xuất bố cục**: hệ thống tự lên **danh sách các bài sẽ tạo** từ mục tiêu lesson, level, thời lượng và dữ liệu có cấu trúc của giáo trình. Mỗi bài trong bố cục có: loại bài, số câu, độ khó, đáp án/giải thích (bật/tắt), **ghi chú cho AI**, và **một dòng lý do** (ví dụ "Lesson có 8 từ vựng mới nên mở đầu bằng nối từ").
 - Người dùng **duyệt hoặc chỉnh**: thêm/xóa bài, đổi loại, số câu, độ khó, thứ tự (nút lên/xuống; kéo thả P2). Số câu bị giới hạn theo Standard profile, vượt thì chặn kèm lý do.
 - Nút **Lưu làm mẫu bố cục** [P1], **Thêm từ kho bài** [P1].
@@ -1126,6 +1127,7 @@ Mỗi chặng **chạy được và demo được** trước khi sang chặng sa
 | D-130 | **Phiên bản máy chủ**: `/api/health` trả `version`, thư mục, PID; trang so với phiên bản của mình, lệch thì chân thanh bên báo "máy chủ bản X" và màn Làm bài trên lớp hiện nguyên văn câu trả lời máy chủ. `npm run dev` chạy `node --watch` để phần máy chủ tự khởi động lại khi mã đổi (trước đây giao diện tự lấy mã mới còn máy chủ thì không). `chay.bat` tắt tiến trình đang chiếm cổng bằng `netstat` + `taskkill` | Mục 7.8 | Đã làm (phiên bản 8) |
 | D-131 | **Làm bài trên lớp có 2 giao diện, giáo viên chọn khi mở phiên: Phiếu (mặc định) hoặc Quiz.** Dạng Phiếu: học sinh thấy nguyên phiếu như bản giáo viên chiếu (cùng viewer, có bút và công cụ trình bày, không có đáp án), làm ngay trên phiếu: bấm phương án, T/F/NG, gõ vào chỗ trống, chọn chữ cái bài nối, bấm từ để sắp câu. Bài tự lưu; nộp xong phiếu khóa, câu đúng tô xanh, câu sai và bỏ trống tô đỏ, hiện điểm. **Học sinh đã nộp (hoặc khi phiên kết thúc) xem được bảng xếp hạng cả lớp**, dòng của mình được tô, không lộ mã cá nhân người khác. Giáo viên bấm một học sinh: mở đúng phiếu với bài làm của em (đúng xanh, sai đỏ), vẫn dùng bút, trình bày, bật đáp án, chuyển em trước/em sau; dạng Quiz giữ bảng từng câu như cũ. **Hệ thống tự đảo đáp án cho từng em**, không hỏi giáo viên: đảo phương án mcq, cloze_mcq và cột phải bài nối; không đảo T/F/NG, sắp xếp câu, các dạng tự điền và câu có phương án kiểu "All of the above", "A and B". Thứ tự cố định theo mã phiên + mã cá nhân; máy chủ đổi về thứ tự gốc trước khi lưu và chấm, giáo viên luôn xem theo thứ tự gốc | Mục 7.8 | Đã làm (phiên bản 9) |
 | D-132 | **chay.bat tự tắt mọi tiến trình node cũ** (`taskkill /F /IM node.exe`) trước khi lấy bản mới, nên cập nhật xong chỉ cần chạy lại chay.bat. Bản chay.bat để ở Desktop chỉ còn lo tải mã về, rồi gọi bản chay.bat mới nhất trong thư mục cài đặt, nên thay đổi sau này của chay.bat tự đến máy mà không phải tải lại tệp. Đánh đổi: tắt luôn các chương trình Node khác đang chạy trên máy | Mục 7.8 | Đã làm (phiên bản 10) |
+| D-133 | **Một thước đo trang cho cả wizard và Preview.** Bước Khối bài và Bố cục dựng một phiếu nháp từ khối bài (nội dung AI giả lập với hạt giống cố định, bài từ kho dùng nội dung thật) rồi chia trang bằng chính `WSV.measure` của viewer, có cả tự thu gọn D-87; bỏ ước tính bằng công thức `AI.estimateHeight` ở giao diện. Dàn khối tự động vẫn dàn nhanh bằng ước tính, sau đó chỉnh số câu theo số đo thật đến khi lấp 90–100% mà không vượt số trang. Bước Bố cục có **sơ đồ trang** (mỗi trang A4 một ô, các bài xếp theo chiều cao thật) và mỗi bài ghi nằm ở trang nào. Sinh xong, màn tiến trình ghi số trang thật; dài hơn mục tiêu thì báo và chỉ tới gợi ý thu gọn ở Preview | Mục 7.3 | Đã làm (phiên bản 11) |
 
 ---
 
@@ -1203,6 +1205,7 @@ Mở rộng A.1; các trường thêm là tùy chọn nhưng lesson thiếu chú
 
 | Phiên bản | Ngày | Thay đổi |
 |---|---|---|
+| 4.0 | 22/10/2026 | D-133: wizard và Preview dùng chung một thước đo trang, sơ đồ trang ở bước Bố cục |
 | 3.9 | 22/10/2026 | D-129: làm bài trên lớp qua máy chủ máy giáo viên (mã phiên, mã cá nhân, chấm phía máy chủ, xếp hạng, biểu đồ, ảnh báo cáo); thay D-48, D-101 trong phạm vi này |
 | 3.8 | 22/10/2026 | D-125…D-128: bản v2 là dự án Node/Vite chạy được khi clone, lớp dịch vụ AI có bản Claude qua máy chủ nhỏ (khóa phía máy chủ, tự quay về giả lập khi lỗi), đường sang React chỉ viết lại lớp giao diện |
 | 3.7 | 22/10/2026 | D-121…D-124: tối ưu cấu trúc mã (logic miền rời khỏi màn hình, lớp `importers.js`, tách `views-review.js`, bản dựng xếp lớp tường minh, `run_all.py`); mục 4 khớp mã thực tế, không đổi hành vi |
