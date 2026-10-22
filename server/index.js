@@ -65,7 +65,7 @@ const DIST = path.join(root, 'dist', 'ws-studio.html');
 
 const STUDENT = path.join(root, 'server', 'student.html');
 
-http.createServer((req, res) => {
+const server = http.createServer((req, res) => {
   if(req.url.startsWith('/api/')) return api(req, res);
   if(req.method === 'GET' && /^\/lop(\/|\?|$)/.test(req.url)){
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
@@ -80,7 +80,12 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return fs.createReadStream(DIST).pipe(res);
   }
   res.writeHead(404); res.end();
-}).listen(PORT, () => {
+});
+server.on('error', (err) => {
+  if(err.code === 'EADDRINUSE'){ console.error(`\n[!] Cổng ${PORT} đang được một chương trình khác dùng, thường là cửa sổ ws-studio cũ.\n    Đóng cửa sổ đó (hoặc chạy: taskkill /F /IM node.exe) rồi chạy lại.\n`); process.exit(1); }
+  throw err;
+});
+server.listen(PORT, () => {
   console.log(`ws-studio: http://localhost:${PORT}  (${DEV ? 'dev' : 'bản dựng'}, AI: ${claude ? 'Claude ' + claude.MODEL : 'giả lập, chưa có ANTHROPIC_API_KEY'})`);
   const lan = classroom.lanUrls(PORT); if(lan.length) console.log(`Học sinh vào làm bài: ${lan.join('  ')}`);
 });

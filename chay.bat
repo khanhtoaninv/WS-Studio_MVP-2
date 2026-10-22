@@ -75,6 +75,8 @@ if exist ".env" (
 )
 
 echo [4/4] Chay may chu va mo trinh duyet
+rem Tat may chu ws-studio cu con dang chay o cong nay, neu khong trang moi se dung may chu cu
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort %PORT% -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if($p -and $p.ProcessName -eq 'node'){ Stop-Process -Id $p.Id -Force; Write-Host '      Da tat may chu ws-studio cu.' } }"
 start "" /b powershell -NoProfile -WindowStyle Hidden -Command "for($i=0;$i -lt 60;$i++){try{Invoke-WebRequest -UseBasicParsing http://localhost:%PORT%/api/health | Out-Null; Start-Process http://localhost:%PORT%/; break}catch{Start-Sleep -Milliseconds 500}}"
 echo.
 echo ws-studio dang chay tai http://localhost:%PORT%/
