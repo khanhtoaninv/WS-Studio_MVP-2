@@ -36,6 +36,10 @@ Nguồn AI đang dùng hiện ở **Cài đặt → Nguồn AI**. Khi Claude l�
 
 Cấu hình trong `.env`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` (mặc định `claude-opus-5-5`), `CLAUDE_EFFORT` (mặc định `medium`), `PORT`, `VITE_AI_MODE=mock` để ép dùng giả lập.
 
+## Số phiên bản
+
+Mỗi lần cập nhật tăng `VERSION` trong `src/version.js` thêm 1 và ghi một dòng vào `NOTE`. Số này hiện ở chân thanh bên, ngay dưới "Nạp dữ liệu mẫu" và "Reset", để biết đang chạy bản nào.
+
 ## Cấu trúc
 
 ```

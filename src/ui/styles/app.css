@@ -57,6 +57,7 @@ h1{font-size:var(--f28)} h2{font-size:var(--f20)} h3{font-size:var(--f16)}
 .nav-sep{height:1px;background:var(--line);margin:10px 4px}
 .nav-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:12px;padding-bottom:52px}
 .nav-foot button{background:none;border:none;text-align:left;padding:6px 10px;color:var(--ink-3);font-size:13px;border-radius:6px;cursor:pointer}
+.nav-foot .ver{padding:6px 10px 0;color:var(--ink-3);font-size:12px;border-top:1px solid var(--line);margin-top:6px}
 .nav-foot button:hover{background:var(--surface-2);color:var(--ink)}
 .main{grid-row:2;overflow:auto;position:relative}
 .page{max-width:1240px;margin:0 auto;padding:24px 28px 80px}
