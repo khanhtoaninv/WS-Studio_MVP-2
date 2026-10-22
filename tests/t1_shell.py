@@ -17,7 +17,7 @@ nav = r.text('#nav'); r.check('Duyệt Phiếu' not in nav, 'Cấp 1 không th�
 r.user('ha'); nav = r.text('#nav'); r.check('Duyệt Phiếu' in nav, 'Cấp 2 thấy mục Duyệt Phiếu có huy hiệu')
 r.check('Phiếu Chờ duyệt' in r.text() or 'Chờ duyệt' in r.text(), 'Dashboard cấp 2 hiện hàng chờ duyệt')
 r.check('Hà' in r.text('#topbar') and 'Cấp 2' in r.text('#topbar'), 'Thanh trên hiện người dùng và vai trò')
-r.user('thu'); nav = r.text('#nav'); r.check('Cấu hình hệ thống' in nav, 'Admin thấy Cấu hình hệ thống')
+r.user('thu'); nav = r.text('#nav'); r.check('Cài đặt' in nav, 'Admin thấy Cài đặt')
 r.user('lan')
 # persistence
 r.p.reload(); r.p.wait_for_timeout(300); r.check(r.js("WS.S.state.currentUserId")=='lan', 'Tải lại trang giữ dữ liệu')

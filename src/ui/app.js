@@ -27,16 +27,16 @@ App.parse = () => {
 App.navItems = () => {
   const me = Q.me(); const pending = S.state.worksheets.filter(w=>w.status==='pending').length;
   return [
-    {r:'home', href:'#/', ico:'⌂', label:'Dashboard'},
     {r:'wizard', href:'#/soan', ico:'＋', label:'Soạn phiếu', cta:true},
-    {r:'worksheets', href:'#/phieu', ico:'▤', label:'Phiếu', alt:['editor','viewer','classroom']},
-    {r:'library', href:'#/kho', ico:'▦', label:'Kho bài', alt:['exercise']},
+    {r:'home', href:'#/', ico:'⌂', label:'Dashboard'},
+    {r:'worksheets', href:'#/phieu', ico:'▤', label:'Kho Phiếu', alt:['editor','viewer','classroom']},
+    {r:'library', href:'#/kho', ico:'▦', label:'Kho Bài', alt:['exercise']},
     {r:'curriculum', href:'#/giao-trinh', ico:'❖', label:'Giáo trình'},
     {r:'standards', href:'#/tieu-chuan', ico:'✓', label:'Tiêu chuẩn'},
     me.role==='l2' && {r:'review', href:'#/duyet', ico:'◎', label:'Duyệt Phiếu', badge:pending},
     {r:'log', href:'#/nhat-ky', ico:'≡', label:'Nhật ký'},
-    {r:'feedback', href:'#/phan-hoi', ico:'✉', label:'Phản hồi đã gửi'},
-    me.role==='admin' && {r:'admin', href:'#/cau-hinh', ico:'⚙', label:'Cấu hình hệ thống'}
+    {r:'feedback', href:'#/phan-hoi', ico:'✉', label:'Phản hồi'},
+    me.role==='admin' && {r:'admin', href:'#/cau-hinh', ico:'⚙', label:'Cài đặt'}
   ].filter(Boolean);
 };
 App.shell = () => {
@@ -67,7 +67,8 @@ App.renderTabbar = () => {
   const cur = n => r===n.r || (n.alt||[]).includes(r);
   document.getElementById('tabbar').innerHTML = main.map(n=>`<a href="${n.href}" class="${cur(n)?'on':''}" ${cur(n)?'aria-current="page"':''}><span aria-hidden="true">${n.ico}</span>${n.r==='wizard'?'Soạn':n.label}</a>`).join('')+
     `<button data-a="tabMore" aria-haspopup="menu" aria-label="Mục khác"><span aria-hidden="true">≡</span>Khác</button>`;
-  App._tabRest = rest.concat([{label:'Cài đặt', href:'#/cai-dat', ico:'⚙'}]);
+  App._tabRest = rest.filter(n=>n.r!=='admin').concat([{label:'Cài đặt', href:'#/cai-dat', ico:'⚙'}]);
+  if(Q.me().role==='admin') App._tabRest.push({label:'Cấu hình hệ thống', href:'#/cau-hinh', ico:'⚙'});
 };
 App.render = () => {
   if(App._rendering){ App._again = true; return; }
