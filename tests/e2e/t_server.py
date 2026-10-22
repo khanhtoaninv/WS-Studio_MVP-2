@@ -1,5 +1,5 @@
 """Kiểm thử máy chủ + dịch vụ Claude với Claude API giả (không tốn tiền, không cần mạng)."""
-import json, os, subprocess, sys, time, pathlib, urllib.request
+import json, os, subprocess, sys, time, pathlib, urllib.request, urllib.error
 from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(__file__).resolve().parents[2]; HERE = pathlib.Path(__file__).parent
 oks, fails = 0, []
@@ -56,6 +56,74 @@ h, r, log = run(True)
 print('Claude API lỗi 500')
 check(r['kind']=='claude' and r['n']>=1 and 'Claude' not in r['log'][0], 'Lỗi API: tự quay về AI giả lập, vẫn có bài')
 check(r['toast'], 'Hiện thông báo "Không gọi được Claude"')
+def post(port, path, body):
+    rq = urllib.request.Request(f'http://127.0.0.1:{port}{path}', json.dumps(body).encode(), {'content-type':'application/json'})
+    try: return 200, json.load(urllib.request.urlopen(rq))
+    except urllib.error.HTTPError as e: return e.code, json.load(e)
+def get(port, path): return json.load(urllib.request.urlopen(f'http://127.0.0.1:{port}{path}'))
+
+print('Cài đặt API: chọn nhà cung cấp, khóa và model (D-137)')
+import tempfile
+tmp = pathlib.Path(tempfile.mkdtemp()) / 'ai.json'
+fake = subprocess.Popen(['node', str(HERE/'fake_anthropic.mjs')]); fake_bad = subprocess.Popen(['node', str(HERE/'fake_anthropic.mjs')], env=dict(os.environ, FAIL='1', FAKE_PORT='8791'))
+time.sleep(0.5)
+envx = {k:v for k,v in os.environ.items() if k not in ('ANTHROPIC_API_KEY','OPENAI_API_KEY','GEMINI_API_KEY','DEEPSEEK_API_KEY')}
+envx.update(PORT='5197', WS_AI_SETTINGS=str(tmp), ANTHROPIC_BASE_URL='http://127.0.0.1:8790', OPENAI_BASE_URL='http://127.0.0.1:8790/v1',
+            GEMINI_BASE_URL='http://127.0.0.1:8790/v1beta', DEEPSEEK_BASE_URL='http://127.0.0.1:8791')
+srv = subprocess.Popen(['node','server/index.js'], cwd=ROOT, env=envx, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+try:
+    for _ in range(50):
+        try: urllib.request.urlopen('http://127.0.0.1:5197/api/health'); break
+        except Exception: time.sleep(0.2)
+    check(get(5197,'/api/health')['ai']=='mock', 'Chưa cài gì: mặc định AI giả lập')
+    st, d = post(5197,'/api/ai/settings',{'provider':'openai'})
+    check(st==200 and d['active']=='mock' and d['missingKey']=='openai' and get(5197,'/api/health')['ai']=='mock', 'Chọn OpenAI mà thiếu khóa: vẫn dùng giả lập và báo thiếu khóa')
+    st, d = post(5197,'/api/ai/settings',{'provider':'openai','providers':{'openai':{'key':' "sk-openai-test-123456789" ','model':'gpt-x'}}})
+    h = get(5197,'/api/health')
+    check(h['ai']=='openai' and h['model']=='gpt-x', 'Lưu khóa và model: /api/health báo OpenAI gpt-x (bỏ dấu nháy, khoảng trắng)')
+    raw = json.dumps(get(5197,'/api/ai/settings'))
+    check('sk-openai-test-123456789' not in raw and get(5197,'/api/ai/settings')['providers']['openai']['hasKey'], 'Trình duyệt chỉ thấy khóa đã che, không thấy khóa thật')
+    check(json.loads(tmp.read_text())['providers']['openai']['key']=='sk-openai-test-123456789' and oct(tmp.stat().st_mode & 0o777)=='0o600', 'Khóa lưu ở tệp riêng trên máy chủ, quyền 600')
+    st, d = post(5197,'/api/ai/settings',{'provider':'nope'}); check(st==400, 'Nhà cung cấp lạ bị từ chối')
+    st, d = post(5197,'/api/ai/test',{'provider':'deepseek','key':'sk-wrong','model':'deepseek-chat'})
+    check(st==401 and 'Incorrect API key' in d['error'], 'Kiểm tra kết nối với khóa sai: báo lỗi 401 của nhà cung cấp')
+    with sync_playwright() as pw:
+        b = pw.chromium.launch(**({'executable_path':os.environ['WS_CHROME']} if os.environ.get('WS_CHROME') else {}))
+        p = b.new_page(); errs = []; p.on('pageerror', lambda e: errs.append(str(e)))
+        p.goto('http://127.0.0.1:5197/'); p.wait_for_selector('#main'); p.wait_for_timeout(400)
+        p.evaluate("WS.S.commit(st=>{ st.currentUserId='thu'; })"); p.evaluate("location.hash='#/cau-hinh?tab=api'"); p.wait_for_timeout(900)
+        gen = """async () => { const g = await WS.services.ai.generate('ex1-l2-u1-1','mcq',{count:4}); return {kind:WS.services.ai.kind, label:WS.services.ai.label, log:g.log[0], n:g.draft.questions.length, errors:WS.V.validate({type:'mcq',scope:{lessonIds:['ex1-l2-u1-1']},draft:g.draft}).errors.length}; }"""
+        check(p.is_checked('input[name=apiProv][value=openai]'), 'Tab API mở đúng nhà đang dùng (OpenAI)')
+        check(p.locator('#apiModel').input_value()=='gpt-x' and p.locator('#apiKey').get_attribute('placeholder').startswith('Đang dùng sk-open'), 'Ô model hiện gpt-x, ô khóa hiện khóa đã che')
+        r = p.evaluate(gen)
+        check(r['kind']=='openai' and r['n']==4 and 'OpenAI' in r['log'] and r['errors']==0, 'Sinh bài qua OpenAI: 4 câu, qua bộ kiểm tra không lỗi')
+        # Gemini qua giao diện: chọn, nhập khóa, thử kết nối, lưu
+        p.click('input[name=apiProv][value=gemini]'); p.wait_for_selector('#apiKey')
+        p.fill('#apiKey','AIza-gemini-test'); p.fill('#apiModel','gemini-test')
+        p.click('[data-a=admApiTest]'); p.wait_for_selector('.banner.ok', timeout=5000)
+        check('Kết nối được' in p.inner_text('.banner.ok'), 'Nút Kiểm tra kết nối báo "Kết nối được"')
+        p.click('[data-a=admApiSave]'); p.wait_for_timeout(800)
+        r = p.evaluate(gen)
+        check(r['kind']=='gemini' and r['n']==4 and 'Gemini' in r['log'], 'Lưu xong dùng ngay Gemini, không cần chạy lại máy chủ')
+        # DeepSeek: máy chủ giả lỗi, app tự quay về giả lập và báo
+        post(5197,'/api/ai/settings',{'provider':'deepseek','providers':{'deepseek':{'key':'sk-ds'}}})
+        p.evaluate('WS.services.detect()'); p.wait_for_timeout(500)
+        r = p.evaluate(gen)
+        check(r['kind']=='deepseek' and 'DeepSeek' not in (r['log'] or '') and r['n']>=1 and 'Không gọi được DeepSeek' in p.inner_text('body'), 'Nhà cung cấp lỗi 401: quay về giả lập và thông báo đúng tên nhà cung cấp')
+        # Về giả lập
+        p.evaluate("location.hash='#/cau-hinh?tab=api'"); p.wait_for_selector('input[name=apiProv]'); p.wait_for_timeout(400)
+        p.click('input[name=apiProv][value=mock]'); p.click('[data-a=admApiSave]'); p.wait_for_timeout(800)
+        r = p.evaluate(gen)
+        check(r['kind']=='mock' and get(5197,'/api/health')['ai']=='mock', 'Chọn AI giả lập và lưu: quay về giả lập')
+        check(not errs, 'Không có lỗi trang: ' + '; '.join(errs)); b.close()
+    log = json.load(urllib.request.urlopen('http://127.0.0.1:8790/__log'))
+    o = [l for l in log if l['url'].endswith('/v1/chat/completions')]; g = [l for l in log if ':generateContent' in l['url']]
+    check(o and all(l['auth']=='Bearer sk-openai-test-123456789' and l['model']=='gpt-x' and l['json']=='json_object' and l['hasSchema'] for l in o), 'OpenAI: gửi khóa Bearer, model gpt-x, ép JSON và kèm lược đồ')
+    check(g and all(l['auth'] in ('AIza-gemini-test',) and l['model']=='gemini-test' and l['json']=='application/json' for l in g), 'Gemini: gửi khóa x-goog-api-key, model gemini-test, ép JSON')
+    check(any('Daily routines' in (l['prompt'] or '') for l in o), 'Lời nhắc gửi OpenAI có ngữ cảnh lesson')
+finally:
+    srv.terminate(); fake.terminate(); fake_bad.terminate()
+
 print('Chế độ dev (Vite trong máy chủ, không có khóa)')
 env = {k:v for k,v in os.environ.items() if k!='ANTHROPIC_API_KEY'}; env['PORT']='5198'
 d = subprocess.Popen(['node','server/index.js','--dev'], cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)

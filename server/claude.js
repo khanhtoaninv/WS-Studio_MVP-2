@@ -1,11 +1,7 @@
-/* Gọi Claude cho ba việc: sinh bài, sửa bài theo lỗi của bộ kiểm tra, tạo phương án cho một câu.
+/* Gọi mô hình AI đang chọn (D-137) cho ba việc: sinh bài, sửa bài theo lỗi của bộ kiểm tra, tạo phương án cho một câu.
    Mỗi lệnh ép Claude trả JSON theo lược đồ của loại bài (src/shared/ai-contract.js). */
-import Anthropic from '@anthropic-ai/sdk';
+import { ask as askModel, Anthropic } from './providers.js';
 import { exerciseSchema, variantsSchema, TYPE_RULES, QUESTION_SCHEMAS } from '../src/shared/ai-contract.js';
-
-export const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-5-5';
-const EFFORT = process.env.CLAUDE_EFFORT || 'medium';
-const client = new Anthropic();
 
 const SYSTEM = `You write English exercises for printed worksheets used by Vietnamese primary and lower-secondary teachers.
 Every exercise must follow the lesson it belongs to:
@@ -39,21 +35,7 @@ function contextBlock(b){
   return parts.filter(Boolean).join('\n');
 }
 
-async function ask(userText, schema){
-  const res = await client.beta.messages.create({
-    model: MODEL,
-    max_tokens: 16000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort: EFFORT, format: { type: 'json_schema', schema } },
-    system: SYSTEM,
-    messages: [{ role: 'user', content: userText }],
-  });
-  if(res.stop_reason === 'refusal') throw Object.assign(new Error('Claude từ chối yêu cầu này'), { status: 422 });
-  if(res.stop_reason === 'max_tokens') throw Object.assign(new Error('Claude trả lời bị cắt (max_tokens)'), { status: 502 });
-  const text = res.content.filter(c => c.type === 'text').map(c => c.text).join('');
-  return JSON.parse(text);
-}
+const ask = (userText, schema) => askModel(SYSTEM, userText, schema);
 
 export async function generate(b){
   const count = Math.max(b.standard.minQ, Math.min(b.count || b.standard.minQ, b.standard.maxQ));

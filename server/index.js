@@ -11,23 +11,21 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /* Đọc .env: .env thắng biến môi trường Windows; bỏ BOM, dấu nháy, khoảng trắng và CRLF quanh giá trị */
 const envFile = path.join(root, '.env');
-const sysKey = process.env.ANTHROPIC_API_KEY;
-let envKeySet = false;
 try {
   for(const line of fs.readFileSync(envFile, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/)){
     const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/); if(!m) continue;
     const v = m[2].replace(/^(["'])(.*)\1$/, '$2').trim();
-    if(v){ process.env[m[1]] = v; if(m[1] === 'ANTHROPIC_API_KEY') envKeySet = true; }
+    if(v) process.env[m[1]] = v;
   }
 } catch { /* không có .env */ }
-const maskKey = (k) => k ? `${k.slice(0, 10)}...${k.slice(-4)} (${k.length} ký tự)` : '(trống)';
+process.env.WS_AI_SETTINGS ||= path.join(root, 'data', 'ai-settings.json');
 
 const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.PORT || 5173);
-const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 /* Thiếu thư viện (chưa npm install): báo bằng tiếng Việt thay vì in lỗi Node */
 const needLibs = (e) => { console.error('\n[!] Thiếu thư viện' + (e && e.message ? ` (${e.message.split('\n')[0]})` : '') + '.\n    Chạy:  npm install\n    rồi chạy lại. Dùng chay.bat thì nó tự cài.\n'); process.exit(1); };
-const claude = HAS_KEY ? await import('./claude.js').catch(needLibs) : null;
+const claude = await import('./claude.js').catch(needLibs);
+const providers = await import('./providers.js').catch(needLibs);
 const classroom = await import('./classroom.js');
 const { VERSION } = await import('../src/version.js');
 const STARTED = Date.now();
@@ -45,9 +43,23 @@ const routes = {
   'POST /api/ai/variants': (b) => claude.variants(b),
 };
 
+const isLocal = (req) => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+
 async function api(req, res){
-  if(req.method === 'GET' && req.url === '/api/health') return send(res, 200, { ok: true, ai: claude ? 'claude' : 'mock', model: claude ? claude.MODEL : null, classroom: true,
-    version: VERSION, dev: DEV, dir: root, pid: process.pid, startedAt: STARTED });
+  if(req.method === 'GET' && req.url === '/api/health'){
+    const a = providers.active();
+    return send(res, 200, { ok: true, ai: a.id, aiLabel: a.label || null, model: a.model || null, classroom: true,
+      version: VERSION, dev: DEV, dir: root, pid: process.pid, startedAt: STARTED });
+  }
+  /* Cài đặt API chỉ đổi được từ chính máy chạy máy chủ, học sinh trong mạng LAN không đụng tới được */
+  if(req.url === '/api/ai/settings' || req.url === '/api/ai/test'){
+    if(!isLocal(req)) return send(res, 403, { error: 'Chỉ đổi được cài đặt API trên máy đang chạy máy chủ' });
+    try {
+      if(req.method === 'GET' && req.url === '/api/ai/settings') return send(res, 200, providers.describe());
+      if(req.method === 'POST' && req.url === '/api/ai/settings') return send(res, 200, providers.update(await readJson(req)));
+      if(req.method === 'POST' && req.url === '/api/ai/test'){ const b = await readJson(req); return send(res, 200, await providers.test(b.provider, b)); }
+    } catch(err){ return send(res, err.status || 500, { error: err.message }); }
+  }
   const cls = classroom.routes[`${req.method} ${req.url}`];
   if(cls){
     try { send(res, 200, await cls(await readJson(req), { port: PORT })); }
@@ -56,7 +68,7 @@ async function api(req, res){
   }
   const route = routes[`${req.method} ${req.url}`];
   if(!route) return send(res, 404, { error: 'Không có endpoint này' });
-  if(!claude) return send(res, 503, { error: 'Máy chủ chưa có ANTHROPIC_API_KEY' });
+  if(providers.active().id === 'mock') return send(res, 503, { error: 'Chưa chọn nhà cung cấp AI hoặc thiếu khóa API' });
   try {
     const body = await readJson(req);
     if(!claude.isKnownType(body.type)) return send(res, 400, { error: 'Loại bài không hợp lệ' });
@@ -64,7 +76,7 @@ async function api(req, res){
     console.log(`${req.url} ${body.type} ${Date.now() - t0}ms`);
     send(res, 200, out);
   } catch(err) {
-    const status = err instanceof claude.Anthropic.APIError ? (err.status || 502) : (err.status || 500);
+    const status = err.status || (err instanceof providers.Anthropic.APIError ? 502 : 500);
     console.error(req.url, status, err.message);
     send(res, status, { error: err.message });
   }
@@ -106,11 +118,9 @@ server.on('error', (err) => {
   throw err;
 });
 server.listen(PORT, () => {
-  console.log(`ws-studio phiên bản ${VERSION}: http://localhost:${PORT}  (${DEV ? 'dev' : 'bản dựng'}, thư mục ${root}, AI: ${claude ? 'Claude ' + claude.MODEL : 'giả lập, chưa có ANTHROPIC_API_KEY'})`);
-  if(claude){
-    console.log(`Khóa API: ${maskKey(process.env.ANTHROPIC_API_KEY)} lấy từ ${envKeySet ? envFile : 'biến môi trường Windows'}`);
-    if(envKeySet && sysKey && sysKey !== process.env.ANTHROPIC_API_KEY) console.log('  (đã bỏ qua biến môi trường ANTHROPIC_API_KEY của Windows vì .env có khóa)');
-    if(process.env.ANTHROPIC_BASE_URL && !/^https:\/\/api\.anthropic\.com\/?$/.test(process.env.ANTHROPIC_BASE_URL)) console.log(`  [!] ANTHROPIC_BASE_URL=${process.env.ANTHROPIC_BASE_URL} đang đổi địa chỉ gọi API`);
-  } else if(!HAS_KEY) console.log(`Không đọc được khóa API trong ${envFile}`);
+  console.log(`ws-studio phiên bản ${VERSION}: http://localhost:${PORT}  (${DEV ? 'dev' : 'bản dựng'}, thư mục ${root}, máy chủ AI sẵn sàng)`);
+  const a = providers.active();
+  if(a.id !== 'mock') console.log(`AI: ${a.label}, model ${a.model}, khóa ${providers.mask(a.key)} (${a.key.length} ký tự) lấy từ ${a.source === 'env' ? '.env hoặc biến môi trường' : 'Cấu hình hệ thống'}`);
+  else console.log(a.missingKey ? `AI: giả lập (đã chọn ${a.missingKey} nhưng chưa có khóa)` : 'AI: giả lập. Chọn Claude, OpenAI, Gemini hoặc DeepSeek ở Cấu hình hệ thống > API.');
   const lan = classroom.lanUrls(PORT); if(lan.length) console.log(`Học sinh vào làm bài: ${lan.join('  ')}`);
 });

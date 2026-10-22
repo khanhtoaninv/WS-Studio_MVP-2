@@ -1,4 +1,4 @@
-/* Dịch vụ AI gọi Claude qua máy chủ nhỏ (server/). Trình duyệt không giữ khóa API.
+/* Dịch vụ AI gọi mô hình thật (Claude, OpenAI, Gemini, DeepSeek) qua máy chủ nhỏ (server/). Trình duyệt không giữ khóa API.
    Mỗi hàm dựng ngữ cảnh lesson, tiêu chuẩn, theme rồi gọi một endpoint /api/ai/*;
    máy chủ trả JSON theo lược đồ trong shared/ai-contract.js. Bộ kiểm tra V01–V17 vẫn chạy tại chỗ. */
 import { WS } from '../../ws.js';
@@ -37,15 +37,15 @@ function applyExercise(d, type, w){
 }
 
 export function createClaudeAIService(info){
-  const model = info.model || 'Claude';
+  const name = (info.aiLabel || 'Claude').replace(/\s*\(.*\)$/, ''); const model = info.model || name;
   const generate = async (lessonId, type, o = {}) => {
     const w = await post('/api/ai/generate', { ...lessonContext(lessonId, type, o.themeId), type,
       count: o.count, difficulty: o.difficulty || 'medium', note: o.note || '', focus: o.focus || [], blockIndex: o.blockIndex || 0, variant: o.variant || null });
-    return { draft: applyExercise(skeleton(type, o), type, w), log: [`Sinh bằng Claude (${model}).`] };
+    return { draft: applyExercise(skeleton(type, o), type, w), log: [`Sinh bằng ${name} (${model}).`] };
   };
   return {
-    kind: 'claude',
-    label: `Claude API · ${model}`,
+    kind: info.ai || 'claude', name,
+    label: `${name} API · ${model}`,
     generate,
     async autofix(ex, lesson){
       const v = WS.V.validate(ex);
@@ -55,7 +55,7 @@ export function createClaudeAIService(info){
       const w = await post('/api/ai/fix', { ...lessonContext(lesson.id, ex.type, ex.themeId), type: ex.type, issues,
         exercise: { title:d.title, instruction:d.instruction, passage:d.passage, wordBank:d.wordBank, extraRight:d.extraRight, questions:d.questions.map(q => toWire(ex.type, q)) } });
       applyExercise(d, ex.type, w);
-      return [`Claude sửa ${[...new Set(issues.map(i => i.code))].join(', ')}`];
+      return [`${name} sửa ${[...new Set(issues.map(i => i.code))].join(', ')}`];
     },
     async questionVariants(ex, qid, chips = [], n = 3){
       const q = ex.draft.questions.find(x => x.id === qid);

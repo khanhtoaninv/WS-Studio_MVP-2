@@ -36,7 +36,9 @@ npm run dev                 # http://localhost:5173, sửa mã là thấy ngay
 
 Nguồn AI đang dùng hiện ở **Cài đặt → Nguồn AI**. Khi Claude lỗi (mạng, hết hạn mức, từ chối), lệnh đó tự chạy bằng AI giả lập và app báo bằng thông báo đỏ.
 
-Cấu hình trong `.env`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` (mặc định `claude-opus-5-5`), `CLAUDE_EFFORT` (mặc định `medium`), `PORT`, `VITE_AI_MODE=mock` để ép dùng giả lập.
+Chọn AI ngay trong app: **Cấu hình hệ thống > API**. Mặc định là AI giả lập; chọn Claude, OpenAI, Gemini hoặc DeepSeek rồi nhập khóa và tên model (có nút Kiểm tra kết nối). Khóa lưu trong `data/ai-settings.json` trên máy chủ (không đưa lên git) và chỉ đổi được từ máy đang chạy máy chủ. Bản cũ đã có `ANTHROPIC_API_KEY` trong `.env` thì tự chọn Claude.
+
+Cấu hình trong `.env` (dùng khi chưa nhập trong app): `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, và `CLAUDE_MODEL`/`OPENAI_MODEL`/`GEMINI_MODEL`/`DEEPSEEK_MODEL`, `CLAUDE_MODEL` (mặc định `claude-opus-5-5`), `CLAUDE_EFFORT` (mặc định `medium`), `PORT`, `VITE_AI_MODE=mock` để ép dùng giả lập.
 
 ## Làm bài trên lớp
 

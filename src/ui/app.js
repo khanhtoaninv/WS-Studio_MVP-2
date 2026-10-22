@@ -208,7 +208,7 @@ App.showSelfTest = () => {
 /* ---------- boot ---------- */
 App.loadSeed = () => { S.state = WS.makeSeed(); S.state.seededAt = Date.now(); S.session = {undo:{},redo:{},loadedRev:{},ui:{}}; S.persist(); S.emit(); };
 App.boot = () => {
-  WS.services.config.onFallback = (err) => UI.toast(`Không gọi được Claude (${err.message}). Lần này dùng AI giả lập.`, {err:true, ms:6000});
+  WS.services.config.onFallback = (err) => UI.toast(`Không gọi được ${(WS.services.ai.name || 'Claude')} (${err.message}). Lần này dùng AI giả lập.`, {err:true, ms:6000});
   const st = S.load();
   if(st){ S.state = st; } else { S.state = WS.makeSeed(); S.state.seededAt = Date.now(); S.persist(); }
   App.shell();

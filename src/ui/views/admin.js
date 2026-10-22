@@ -11,9 +11,9 @@ views.admin = {
   render(main, p){
     if(!isAdmin()){ main.innerHTML = `<div class="page">${UI.empty('Chỉ Admin cấu hình hệ thống','Chuyển sang Thu (Admin) bằng công tắc người dùng. Giáo viên xem giáo trình ở mục Giáo trình.')}</div>`; return; }
     const tab = p.tab || S.session.ui.adminTab || 'cur'; S.session.ui.adminTab = tab;
-    const tabs = [['cur','Giáo trình'],['files','Tệp lesson'],['themes','Theme'],['layouts','Thư viện bố cục'],['qfb','Phản hồi Quiz']];
+    const tabs = [['cur','Giáo trình'],['files','Tệp lesson'],['themes','Theme'],['layouts','Thư viện bố cục'],['api','API'],['qfb','Phản hồi Quiz']];
     let body = '';
-    if(tab==='cur') body = curTab(); else if(tab==='files') body = filesTab(); else if(tab==='themes') body = themesTab(); else if(tab==='layouts') body = layoutsTab(); else body = qfbTab();
+    if(tab==='cur') body = curTab(); else if(tab==='files') body = filesTab(); else if(tab==='themes') body = themesTab(); else if(tab==='layouts') body = layoutsTab(); else if(tab==='api') body = apiTab(); else body = qfbTab();
     main.innerHTML = `<div class="page"><div class="page-head"><div><h1>Cấu hình hệ thống</h1><div class="desc">Chỉ Admin sửa. Dữ liệu ở đây là căn cứ sinh bài và kiểm tra tiêu chuẩn.</div></div></div>
       <div class="seg" style="margin-bottom:16px" role="tablist">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="go" data-href="#/cau-hinh?tab=${k}" role="tab" aria-selected="${tab===k}">${l}</button>`).join('')}</div>${body}</div>`;
   }
@@ -25,6 +25,43 @@ function curTab(){
         <div class="small muted" style="margin:4px 0 10px">${esc(c.cefr)} · ${c.levels.length} level · ${n} lesson${c.imported?' · nhập từ tệp':' · giáo trình mẫu'}</div>
         ${c.levels.map(l=>`<details><summary class="small"><b>${esc(l.name)}</b> (${esc(l.cefr)})</summary>${l.units.map(u=>`<div class="small" style="margin:4px 0 2px 12px"><b>${esc(u.code)} ${esc(u.name)}</b></div>${u.lessons.map(x=>`<div class="row small" style="margin-left:24px"><span>${esc(x.code)} ${esc(x.name)}</span>${x._orig?'<span class="chip yellow">đã sửa tay</span>':''}<span class="spacer"></span>${UI.btn('Sửa lesson',{a:'admEditLs', size:'xs', kind:'ghost', data:{ls:x.id}})}</div>`).join('')}`).join('')}</details>`).join('')}
         <div class="small muted" style="margin-top:10px"><b>Phiên bản:</b> ${vers.slice().reverse().map(v=>`v${esc(v.version)} (${U.fmtDate(v.at)}, ${esc(v.note||'')})`).join(' · ')}</div></div>`; }).join('')}</div>`;
+}
+
+/* ---------- Tab API: chọn nhà cung cấp AI, khóa và model (D-137). Khóa nằm ở máy chủ, trình duyệt chỉ thấy bản đã che ---------- */
+const api = { data: null, err: '', sel: null, draft: {}, msg: null, busy: false, loading: false };
+const AI_ORDER = ['claude', 'openai', 'gemini', 'deepseek'];
+async function apiCall(method, path, body){
+  try {
+    const res = await fetch(path, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true, data } : { ok: false, error: data.error || `HTTP ${res.status}` };
+  } catch(e){ return { ok: false, error: 'Không kết nối được máy chủ' }; }
+}
+const apiLoad = async () => { api.loading = true; const r = await apiCall('GET', '/api/ai/settings'); api.loading = false;
+  if(r.ok){ api.data = r.data; api.err = ''; if(!api.sel) api.sel = r.data.provider; } else api.err = r.error; S.emit(); };
+function apiGrab(){ const k = document.getElementById('apiKey'), m = document.getElementById('apiModel');
+  if(api.sel && api.sel !== 'mock' && k) api.draft[api.sel] = { key: k.value, model: m ? m.value : '' }; }
+function apiTab(){
+  if(!/^https?:$/.test(location.protocol) || !WS.services.config.server)
+    return `<div class="banner warn">Cần chạy ứng dụng qua máy chủ (bấm đúp <code>chay.bat</code>, hoặc <code>npm start</code>) để dùng AI thật. Mở tệp một mình thì chỉ có AI giả lập.</div>`;
+  if(!api.data && !api.loading && !api.err) apiLoad();
+  if(api.err) return `<div class="banner warn">${esc(api.err)}</div><div style="margin-top:10px">${UI.btn('Thử lại',{a:'admApiReload'})}</div>`;
+  if(!api.data) return `<div class="small muted">Đang tải cài đặt API…</div>`;
+  const d = api.data, sel = api.sel || d.provider, P = d.providers[sel], dr = api.draft[sel] || {};
+  const opt = (id, label, note) => `<label class="row" style="padding:8px 0;border-top:1px solid var(--line);gap:10px;cursor:pointer"><input type="radio" name="apiProv" data-c="admApiSel" value="${id}" ${sel===id?'checked':''}><span style="flex:1"><b>${esc(label)}</b>${note?`<div class="small muted">${esc(note)}</div>`:''}</span>${d.provider===id?UI.chip('Đang dùng','green','✓'):''}</label>`;
+  const status = d.active === 'mock' ? (d.missingKey ? `Đã chọn ${d.providers[d.missingKey].label} nhưng chưa có khóa, nên đang dùng AI giả lập.` : 'Đang dùng AI giả lập: không gọi mạng, bài sinh từ kho mẫu có sẵn.') : `Đang dùng ${d.providers[d.active].label}, model ${d.providers[d.active].model}.`;
+  return `<div class="card" style="max-width:720px"><h3 style="margin-top:0">Nhà cung cấp AI</h3>
+    <div class="small muted" style="margin-bottom:8px">${esc(status)}</div>
+    ${opt('mock','AI giả lập (mặc định)','Không cần khóa, dùng để thử giao diện.')}${AI_ORDER.map(id => opt(id, d.providers[id].label, d.providers[id].hasKey ? 'Đã có khóa ' + d.providers[id].keyMask : '')).join('')}
+    ${sel==='mock'?'':`<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:12px">
+      <div class="field"><label for="apiKey">Khóa API ${esc(P.label)}</label>
+        <input class="inp" id="apiKey" type="password" autocomplete="off" spellcheck="false" value="${esc(dr.key||'')}" placeholder="${P.hasKey ? 'Đang dùng ' + esc(P.keyMask) + (P.keySource==='env' ? ' (từ .env)' : '') + ', để trống nếu giữ nguyên' : 'Dán khóa vào đây'}">
+        <div class="small muted">Lấy khóa tại ${esc(P.help)}. Khóa lưu trên máy chủ, không gửi về trình duyệt.</div></div>
+      <div class="field" style="margin-top:10px"><label for="apiModel">Tên model</label>
+        <input class="inp" id="apiModel" value="${esc(dr.model ?? P.model)}" placeholder="${esc(P.defaultModel)}" spellcheck="false"><div class="small muted">Mặc định ${esc(P.defaultModel)}. Đổi sang model bạn có quyền dùng nếu cần.</div></div>
+      ${api.msg?`<div class="banner ${api.msg.ok?'ok':'warn'}" style="margin-top:10px" role="status">${esc(api.msg.text)}</div>`:''}
+      <div class="row" style="margin-top:12px;gap:8px">${UI.btn(api.busy?'Đang thử…':'Kiểm tra kết nối',{a:'admApiTest', disabled:api.busy})}${P.keySource==='settings'?UI.btn('Xóa khóa đã lưu',{a:'admApiClear', kind:'ghost'}):''}</div></div>`}
+    <div class="row" style="margin-top:14px">${UI.btn('Lưu',{a:'admApiSave', kind:'primary', disabled:api.busy})}<span class="small muted">Lưu xong, các lần sinh bài sau dùng ngay, không cần chạy lại máy chủ.</span></div></div>`;
 }
 function filesTab(){
   const all = Q.allLessons();
@@ -119,6 +156,19 @@ Object.assign(WS.ACT, {
       const lv=g('levels').split(/[–-]/).map(s=>s.trim()).filter(Boolean);
       S.commit(st=>{ st.themes.push({id:U.slug(name), name:name.trim(), emoji:'🎨', age:g('age'), levels:lv, active:true, desc:g('setting'), plot:g('plot'), chars, places:g('places').split(',').map(s=>s.trim()).filter(Boolean), avoid:g('avoid').split(',').map(s=>s.trim()).filter(Boolean), hue:180}); audit('Nhập theme', name); }); c(); UI.toast('Đã nhập theme '+name+'.'); return false; }}],
     onMount:m=>m.querySelector('#tm-s').addEventListener('click',()=>{ m.querySelector('#tm-t').value=WS.SAMPLE_THEME_MD; })}); },
+  admApiReload: () => { api.err = ''; api.data = null; S.emit(); },
+  admApiSel: el => { apiGrab(); api.sel = el.value; api.msg = null; S.emit(); },
+  admApiTest: async () => { apiGrab(); const id = api.sel, dr = api.draft[id] || {}; api.busy = true; api.msg = null; S.emit();
+    const r = await apiCall('POST', '/api/ai/test', { provider: id, key: dr.key, model: dr.model }); api.busy = false;
+    api.msg = r.ok ? { ok: true, text: `Kết nối được (${(r.data.ms/1000).toFixed(1)} giây, model ${r.data.model}).` } : { ok: false, text: `Không kết nối được: ${r.error}` }; S.emit(); },
+  admApiSave: async () => { apiGrab(); const id = api.sel, dr = api.draft[id] || {}; const body = { provider: id };
+    if(id !== 'mock'){ body.providers = { [id]: { model: dr.model ?? undefined } }; if((dr.key||'').trim()) body.providers[id].key = dr.key; }
+    api.busy = true; const r = await apiCall('POST', '/api/ai/settings', body); api.busy = false;
+    if(!r.ok){ api.msg = { ok: false, text: r.error }; S.emit(); return; }
+    api.data = r.data; api.draft[id] = { key: '', model: dr.model ?? '' }; await WS.services.detect();
+    api.msg = null; audit('Đổi nhà cung cấp AI', id); UI.toast(r.data.active === 'mock' ? 'Đã lưu. Đang dùng AI giả lập.' : `Đã lưu. Đang dùng ${r.data.providers[r.data.active].label}.`); S.emit(); },
+  admApiClear: async () => { const id = api.sel; const r = await apiCall('POST', '/api/ai/settings', { providers: { [id]: { key: '' } } });
+    if(r.ok){ api.data = r.data; await WS.services.detect(); UI.toast('Đã xóa khóa đã lưu.'); } else api.msg = { ok: false, text: r.error }; S.emit(); },
   admTplShare: el => S.commit(st=>{ const t=st.wsTemplates.find(x=>x.id===el.dataset.id); if(t){ t.shared=el.checked; audit(el.checked?'Đưa mẫu phiếu thành dùng chung':'Bỏ dùng chung mẫu phiếu', t.name); } }),
   admTplDel: el => S.commit(st=>{ const t=st.wsTemplates.find(x=>x.id===el.dataset.id); st.wsTemplates=st.wsTemplates.filter(x=>x.id!==el.dataset.id); if(t) audit('Xóa mẫu phiếu', t.name); }),
   admLayDef: el => S.commit(st=>{ st.layoutDefaults[el.dataset.t]=el.value; audit('Đổi bố cục mặc định', el.dataset.t+' → '+el.value); }),
