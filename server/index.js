@@ -9,7 +9,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-try { process.loadEnvFile(path.join(root, '.env')); } catch { /* không có .env */ }
+/* Đọc .env: .env thắng biến môi trường Windows; bỏ BOM, dấu nháy, khoảng trắng và CRLF quanh giá trị */
+const envFile = path.join(root, '.env');
+const sysKey = process.env.ANTHROPIC_API_KEY;
+let envKeySet = false;
+try {
+  for(const line of fs.readFileSync(envFile, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/)){
+    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/); if(!m) continue;
+    const v = m[2].replace(/^(["'])(.*)\1$/, '$2').trim();
+    if(v){ process.env[m[1]] = v; if(m[1] === 'ANTHROPIC_API_KEY') envKeySet = true; }
+  }
+} catch { /* không có .env */ }
+const maskKey = (k) => k ? `${k.slice(0, 10)}...${k.slice(-4)} (${k.length} ký tự)` : '(trống)';
 
 const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.PORT || 5173);
@@ -96,5 +107,10 @@ server.on('error', (err) => {
 });
 server.listen(PORT, () => {
   console.log(`ws-studio phiên bản ${VERSION}: http://localhost:${PORT}  (${DEV ? 'dev' : 'bản dựng'}, thư mục ${root}, AI: ${claude ? 'Claude ' + claude.MODEL : 'giả lập, chưa có ANTHROPIC_API_KEY'})`);
+  if(claude){
+    console.log(`Khóa API: ${maskKey(process.env.ANTHROPIC_API_KEY)} lấy từ ${envKeySet ? envFile : 'biến môi trường Windows'}`);
+    if(envKeySet && sysKey && sysKey !== process.env.ANTHROPIC_API_KEY) console.log('  (đã bỏ qua biến môi trường ANTHROPIC_API_KEY của Windows vì .env có khóa)');
+    if(process.env.ANTHROPIC_BASE_URL && !/^https:\/\/api\.anthropic\.com\/?$/.test(process.env.ANTHROPIC_BASE_URL)) console.log(`  [!] ANTHROPIC_BASE_URL=${process.env.ANTHROPIC_BASE_URL} đang đổi địa chỉ gọi API`);
+  } else if(!HAS_KEY) console.log(`Không đọc được khóa API trong ${envFile}`);
   const lan = classroom.lanUrls(PORT); if(lan.length) console.log(`Học sinh vào làm bài: ${lan.join('  ')}`);
 });
