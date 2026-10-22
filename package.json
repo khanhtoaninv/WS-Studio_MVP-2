@@ -1,0 +1,24 @@
+{
+  "name": "ws-studio",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "ws-studio: soạn, kiểm tra tiêu chuẩn, duyệt và xuất phiếu bài tập",
+  "scripts": {
+    "dev": "node server/index.js --dev",
+    "build": "vite build",
+    "start": "vite build && node server/index.js",
+    "test": "vite build && python3 tests/run_all.py",
+    "test:server": "vite build && python3 tests/e2e/t_server.py"
+  },
+  "devDependencies": {
+    "vite": "6.3.5",
+    "vite-plugin-singlefile": "2.2.0"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.132.1"
+  }
+}

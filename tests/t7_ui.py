@@ -1,0 +1,62 @@
+"""t7: hệ giao diện (D-114…D-118): icon SVG, aria-label, dark mode, tab bar điện thoại, chữ giao diện sạch mã D-xx."""
+from harness import *
+import re
+r = Run(1440, 900); r.open('#/')
+PAGES = [('lan','#/'),('lan','#/soan'),('lan','#/phieu'),('lan','#/phieu/ws1'),('lan','#/xem/ws8'),('lan','#/kho'),('lan','#/giao-trinh'),('lan','#/tieu-chuan'),('lan','#/nhat-ky'),('lan','#/cai-dat'),('ha','#/duyet'),('thu','#/cau-hinh')]
+EMO = re.compile('[⌂＋▤▦❖✓✔◎≡✉⚙⚠✅✕❌🔔🧪↩⏳✎⬆⬇👁🔓🔒🗄🎨🕘🗑💬🔊🎬🎯⛶✋⟲⌫▾➝➚🧰]')
+print('# Icon SVG, aria-label, mã D-xx')
+bad_emo, bad_lbl, bad_code = [], [], []
+for u, h in PAGES:
+    r.user(u); r.go(h); r.p.wait_for_timeout(300)
+    t = r.js("()=>{const w=document.createTreeWalker(document.getElementById('app'),NodeFilter.SHOW_TEXT);let s='',n;while(n=w.nextNode()){if(n.parentNode.closest('.wsv-content,.wsx,script,style,option,textarea'))continue;s+=n.nodeValue+' ';}return s}")
+    if EMO.search(t): bad_emo.append((h, ''.join(sorted(set(EMO.findall(t))))))
+    lbl = r.js("()=>[...document.querySelectorAll('button,a,[role=button]')].filter(e=>e.offsetParent!==null&&!(e.textContent||'').trim()&&!e.getAttribute('aria-label')).length")
+    if lbl: bad_lbl.append((h, lbl))
+    vis = r.text('#main')
+    if re.search(r'\((?:D|BR|GĐ)-\d+', vis): bad_code.append(h)
+r.check(not bad_emo, 'Không còn ký tự/emoji biểu tượng trong chữ giao diện' + ('' if not bad_emo else f': {bad_emo[:4]}'))
+r.check(not bad_lbl, 'Mọi nút chỉ có icon đều có aria-label' + ('' if not bad_lbl else f': {bad_lbl[:4]}'))
+r.check(not bad_code, 'Không lộ mã D-xx, BR-xx, GĐ-xx trên giao diện' + ('' if not bad_code else f': {bad_code}'))
+r.user('lan'); r.go('#/')
+r.check(r.p.locator('#nav svg.ic').count()>=5, 'Thanh điều hướng dùng icon SVG')
+r.check('focus' in (r.js("document.querySelector('#h-todo').parentElement.className")), 'Khối Cần làm ngay là tầng Tập trung')
+
+print('# Dark mode')
+light_bg = r.js("getComputedStyle(document.body).backgroundColor")
+r.js("WS.App.setTheme('dark')"); r.p.wait_for_timeout(150)
+dark_bg = r.js("getComputedStyle(document.body).backgroundColor")
+r.check(light_bg != dark_bg and r.js("document.documentElement.dataset.theme")=='dark', 'Chọn Tối đổi nền app')
+r.go('#/xem/ws8'); r.p.wait_for_timeout(300)
+pg = r.js("getComputedStyle(document.querySelector('.wsv-page')).backgroundColor")
+bar = r.js("getComputedStyle(document.querySelector('.wsv-bar')).backgroundColor")
+r.check(pg=='rgb(255, 255, 255)' and bar!='rgb(255, 255, 255)', 'Tờ phiếu giữ nền sáng, thanh công cụ viewer tối')
+r.go('#/cai-dat'); r.p.wait_for_timeout(200)
+r.check(r.p.locator('[data-a="setTheme"]').count()==3, 'Cài đặt có công tắc giao diện Hệ thống / Sáng / Tối')
+r.js("WS.App.setTheme('auto')")
+r.check(r.js("document.documentElement.getAttribute('data-theme')")is None, 'Về Theo hệ thống thì bỏ data-theme')
+
+print('# Thanh trên trình soạn và nhóm bút')
+r.go('#/phieu/ws1'); r.p.wait_for_timeout(300)
+r.check(r.p.locator('.ed-top .ed-top1').count()==1 and r.p.locator('.ed-top .ed-top2').count()==1, 'Thanh trên trình soạn hai tầng')
+h1 = r.js("document.querySelector('.ed-top').getBoundingClientRect().height")
+r.check(h1 < 90, f'Thanh trên trình soạn gọn (cao {round(h1)}px)')
+r.go('#/xem/ws8'); r.p.wait_for_timeout(300)
+r.check(not r.p.is_visible('[data-act="color"]'), 'Màu bút ẩn khi chưa vẽ')
+r.p.click('[data-act="penmore"]'); r.p.wait_for_timeout(100)
+r.check(r.p.is_visible('[data-act="color"]') and r.js("document.querySelector('[data-act=penmore]').getAttribute('aria-expanded')")=='true', 'Nút ▾ mở tùy chọn bút')
+
+print('# Điện thoại 375px')
+r.p.set_viewport_size({'width':375,'height':740}); r.p.wait_for_timeout(200)
+r.user('lan'); r.go('#/'); r.p.wait_for_timeout(300)
+r.check(r.p.is_visible('#tabbar') and not r.p.is_visible('#nav'), 'Có tab bar đáy, ẩn thanh bên')
+r.p.click('#tabbar [data-a="tabMore"]'); r.p.wait_for_timeout(150)
+r.check(r.p.locator('.pop .mi').count()>=4, 'Tab Khác mở danh sách mục còn lại')
+r.p.keyboard.press('Escape')
+over = []
+for h in ['#/','#/phieu','#/xem/ws8','#/kho','#/giao-trinh','#/tieu-chuan','#/nhat-ky','#/soan','#/cai-dat']:
+    r.go(h); r.p.wait_for_timeout(300)
+    if r.js("document.documentElement.scrollWidth")>376 or r.js("(()=>{const m=document.getElementById('main');return m.scrollWidth>m.clientWidth+1})()"): over.append(h)
+r.check(not over, 'Không cuộn ngang ở 375px' + ('' if not over else f': {over}'))
+mb = r.js("(()=>{r=[...document.querySelectorAll('#tabbar a,#tabbar button')].map(e=>e.getBoundingClientRect().height);return Math.min(...r)})()")
+r.check(mb>=44, f'Vùng bấm tab bar ≥44px ({round(mb)}px)')
+r.done()
