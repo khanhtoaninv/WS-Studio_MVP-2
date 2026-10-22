@@ -39,6 +39,8 @@ goto :afterget
 
 :update
 echo [1/4] Lay ban moi nhat tu GitHub
+rem Repo co the da doi chu (chuyen tai khoan, fork): luon tro thu muc cai dat ve dia chi REPO o tren
+git -C "%DIR%" remote set-url origin "%REPO%"
 git -C "%DIR%" fetch origin %BRANCH%
 if errorlevel 1 (
   echo       Khong ket noi duoc GitHub, mo ban dang co tren may.

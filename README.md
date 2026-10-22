@@ -2,7 +2,7 @@
 
 Soạn, kiểm tra tiêu chuẩn, duyệt và xuất phiếu bài tập. Giao diện tiếng Việt, nội dung phiếu tiếng Anh.
 
-Đặc tả: [`docs/ws-studio-mvp-spec.md`](docs/ws-studio-mvp-spec.md).
+Đặc tả: [`docs/ws-studio-mvp-spec.md`](docs/ws-studio-mvp-spec.md). Quy tắc làm việc cho Claude: [`CLAUDE.md`](CLAUDE.md). Tiếp tục dự án bằng tài khoản GitHub hoặc Claude khác: [`docs/chuyen-tai-khoan.md`](docs/chuyen-tai-khoan.md). Tài liệu tham khảo (thảo luận, đánh giá giao diện, mã bản cũ v1): [`docs/tham-khao/`](docs/tham-khao/).
 
 Bản v2 giữ nguyên chức năng của prototype (nay là 292 kiểm tra t1–t9, đều đạt) nhưng đổi cấu trúc để:
 
@@ -11,7 +11,7 @@ Bản v2 giữ nguyên chức năng của prototype (nay là 292 kiểm tra t1�
 
 ## Chạy nhanh trên Windows
 
-Tải [`chay.bat`](chay.bat) về máy (ví dụ để ở Desktop) rồi bấm đúp. Cửa sổ luôn ở lại để đọc thông báo và lỗi; nếu nó báo lỗi, chụp màn hình gửi lại. Mỗi lần mở, tệp này tự lấy bản mới nhất từ GitHub vào `%USERPROFILE%\WS-Studio_MVP-2`, cài thư viện khi cần, rồi mở app trong trình duyệt. Lần đầu nó hỏi `ANTHROPIC_API_KEY` (bấm Enter để bỏ qua và dùng AI giả lập) và lưu vào `.env` trong thư mục đó.
+Tải [`chay.bat`](chay.bat) về máy (ví dụ để ở Desktop) rồi bấm đúp. Cửa sổ luôn ở lại để đọc thông báo và lỗi; nếu nó báo lỗi, chụp màn hình gửi lại. Mỗi lần mở, tệp này tự lấy bản mới nhất từ GitHub vào `%USERPROFILE%\WS-Studio_MVP-2`, cài thư viện khi cần, rồi mở app trong trình duyệt. Lần đầu nó hỏi `ANTHROPIC_API_KEY` (bấm Enter để bỏ qua; có thể nhập khóa sau ở Cấu hình hệ thống > API) và lưu vào `.env` trong thư mục đó. Repo đổi địa chỉ (chuyển tài khoản, fork) thì chỉ cần sửa dòng `REPO` trong `chay.bat`.
 
 Cần [Git for Windows](https://git-scm.com/download/win) (`winget install Git.Git`). Có thêm Node.js 20+ (`winget install OpenJS.NodeJS.LTS`) thì app chạy với Claude; không có Node thì mở bản một tệp với AI giả lập. Mỗi lần chạy, `chay.bat` tắt mọi tiến trình Node đang chạy (máy chủ ws-studio cũ) rồi mới mở bản mới, và luôn chạy bản `chay.bat` mới nhất trong thư mục cài đặt, nên tệp ở Desktop không cần tải lại. Thư mục cài do `chay.bat` quản lý: sửa tay trong đó sẽ bị ghi đè ở lần chạy sau, còn `.env` được giữ.
 
@@ -38,7 +38,7 @@ Nguồn AI đang dùng hiện ở **Cài đặt → Nguồn AI**. Khi Claude l�
 
 Chọn AI ngay trong app: **Cấu hình hệ thống > API**. Mặc định là AI giả lập; chọn Claude, OpenAI, Gemini hoặc DeepSeek rồi nhập khóa và tên model (có nút Kiểm tra kết nối). Khóa lưu trong `data/ai-settings.json` trên máy chủ (không đưa lên git) và chỉ đổi được từ máy đang chạy máy chủ. Bản cũ đã có `ANTHROPIC_API_KEY` trong `.env` thì tự chọn Claude.
 
-Cấu hình trong `.env` (dùng khi chưa nhập trong app): `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, và `CLAUDE_MODEL`/`OPENAI_MODEL`/`GEMINI_MODEL`/`DEEPSEEK_MODEL`, `CLAUDE_MODEL` (mặc định `claude-opus-5-5`), `CLAUDE_EFFORT` (mặc định `medium`), `PORT`, `VITE_AI_MODE=mock` để ép dùng giả lập.
+Cấu hình trong `.env` (dùng khi chưa nhập trong app): `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, và `CLAUDE_MODEL`/`OPENAI_MODEL`/`GEMINI_MODEL`/`DEEPSEEK_MODEL` (Claude mặc định `claude-opus-5-5`), `CLAUDE_EFFORT` (mặc định `medium`), `PORT`, `VITE_AI_MODE=mock` để ép dùng giả lập.
 
 ## Làm bài trên lớp
 
@@ -66,6 +66,8 @@ Mỗi lần cập nhật tăng `VERSION` trong `src/version.js` thêm 1 và ghi 
 server/                 Máy chủ Node nhỏ: giữ khóa API, /api/health, /api/ai/{generate,fix,variants}
   index.js              HTTP + Vite (dev) hoặc phục vụ dist (start)
   claude.js             Lời nhắc và lệnh gọi Claude, ép JSON theo lược đồ loại bài
+  providers.js          Cài đặt API (data/ai-settings.json), gọi Claude, OpenAI, Gemini, DeepSeek
+  classroom.js, student.html  Làm bài trên lớp
 src/
   main.js               Điểm vào: import theo thứ tự lớp, hỏi máy chủ, khởi động
   ws.js                 Không gian tên chung WS (window.WS cho bảng demo và kiểm thử)
@@ -90,8 +92,9 @@ src/
   viewer/               Viewer dùng chung cho app và tệp xuất (script cổ điển, nhúng nguyên văn)
   ui/                   Giao diện hiện tại (chuỗi HTML). Lớp duy nhất phải viết lại khi lên React
     ui.js, app.js, views/*.js, styles/*.css
-tests/                  t1–t8 (Playwright, chạy trên dist/ws-studio.html), e2e/ cho máy chủ
+tests/                  t1–t9 (Playwright, chạy trên dist/ws-studio.html), e2e/ cho máy chủ
 tools/fetch_fonts.py    Tạo lại font nhúng
+docs/                   Đặc tả, hướng dẫn chuyển tài khoản, tham-khao/ (tài liệu và mã bản cũ v1)
 ```
 
 Luật phụ thuộc: `domain/` không gọi giao diện; `ui/` đọc store và gọi `A.*` hoặc `WS.services.*`; chỉ `services/` được gọi mạng hoặc lưu trữ. Ngoại lệ còn lại: vài hành động trong `state/actions.js` tự mở hộp xác nhận (`WS.UI.confirm/modal/prompt`), xem bước 5 bên dưới.
@@ -101,5 +104,5 @@ Luật phụ thuộc: `domain/` không gọi giao diện; `ui/` đọc store và
 1. Dựng `src/ui-react/` bằng Vite React, dùng chung `domain/`, `state/`, `services/`, `viewer/`.
 2. Bọc store thành hook: `useStore(selector)` dựa trên `S.on()` và `useSyncExternalStore`.
 3. Chuyển từng màn hình (gợi ý thứ tự: Cài đặt, Kho bài, Duyệt, Dashboard, Soạn phiếu, Trình soạn). Hai bản giao diện chạy song song theo route cho tới khi xong.
-4. Giữ t1–t8: các kiểm thử bám tên lớp CSS và `WS.*`, nên màn hình React giữ tên lớp và `data-*` cũ.
+4. Giữ t1–t9: các kiểm thử bám tên lớp CSS và `WS.*`, nên màn hình React giữ tên lớp và `data-*` cũ.
 5. Việc còn lại trước khi lên React: chuyển các hộp xác nhận trong `state/actions.js` lên `ui/` (hành động chỉ nhận kết quả đã xác nhận); tách `U.download` (đang chạm DOM) khỏi `state/store.js`; đổi dần `WS.*` sang `import`/`export` có tên.
