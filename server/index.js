@@ -14,7 +14,9 @@ try { process.loadEnvFile(path.join(root, '.env')); } catch { /* không có .env
 const DEV = process.argv.includes('--dev');
 const PORT = Number(process.env.PORT || 5173);
 const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
-const claude = HAS_KEY ? await import('./claude.js') : null;
+/* Thiếu thư viện (chưa npm install): báo bằng tiếng Việt thay vì in lỗi Node */
+const needLibs = (e) => { console.error('\n[!] Thiếu thư viện' + (e && e.message ? ` (${e.message.split('\n')[0]})` : '') + '.\n    Chạy:  npm install\n    rồi chạy lại. Dùng chay.bat thì nó tự cài.\n'); process.exit(1); };
+const claude = HAS_KEY ? await import('./claude.js').catch(needLibs) : null;
 const classroom = await import('./classroom.js');
 
 const readJson = (req) => new Promise((resolve, reject) => {
@@ -56,7 +58,7 @@ async function api(req, res){
 
 let vite = null;
 if(DEV){
-  const { createServer } = await import('vite');
+  const { createServer } = await import('vite').catch(needLibs);
   vite = await createServer({ root, server: { middlewareMode: true }, appType: 'spa' });
 }
 const DIST = path.join(root, 'dist', 'ws-studio.html');
