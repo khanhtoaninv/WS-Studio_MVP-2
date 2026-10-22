@@ -1,6 +1,10 @@
 /* ============ APP SHELL, ROUTER, DEMO PANEL, SELFTEST ============ */
 import { WS } from '../ws.js';
 import { VERSION, NOTE } from '../version.js';
+
+/* Máy chủ khởi động từ mã khác phiên bản với trang (thường là cửa sổ máy chủ cũ còn chạy) */
+const verWarn = () => { const srv = WS.services.config.server;
+  return srv && srv.version !== VERSION ? ` <span style="color:var(--bad,#c0392b)" title="Đóng mọi cửa sổ máy chủ rồi chạy lại chay.bat">· máy chủ ${srv.version ? 'bản ' + srv.version : 'mã cũ'}</span>` : ''; };
 const U = WS.U, Q = WS.Q, R = WS.R, S = WS.S, UI = WS.UI, A = WS.A, V = WS.V, AI = WS.AI;
 const esc = U.esc;
 WS.views = WS.views || {};
@@ -54,7 +58,7 @@ App.renderTop = () => {
 App.renderNav = () => {
   const r = App.route.name;
   document.getElementById('nav').innerHTML = App.navItems().map(n=>`<a href="${n.href}" class="${n.cta?'cta ':''}${(r===n.r||(n.alt||[]).includes(r))&&!n.cta?'on':''}" ${(r===n.r||(n.alt||[]).includes(r))?'aria-current="page"':''}><span class="ico" aria-hidden="true">${n.ico}</span>${n.label}${n.badge?`<span class="badge">${n.badge}</span>`:''}</a>`).join('')+
-    `<div class="nav-foot"><button data-a="loadSeed" title="Thay toàn bộ dữ liệu bằng bộ mẫu">⟲ Nạp dữ liệu mẫu</button><button data-a="resetEmpty" title="Xóa phiếu, bài, nhật ký; giữ người dùng, giáo trình và theme mẫu">⌫ Reset (về trống)</button><div class="ver" title="${U.esc(NOTE)}">Phiên bản ${VERSION}</div></div>`;
+    `<div class="nav-foot"><button data-a="loadSeed" title="Thay toàn bộ dữ liệu bằng bộ mẫu">⟲ Nạp dữ liệu mẫu</button><button data-a="resetEmpty" title="Xóa phiếu, bài, nhật ký; giữ người dùng, giáo trình và theme mẫu">⌫ Reset (về trống)</button><div class="ver" title="${U.esc(NOTE)}">Phiên bản ${VERSION}${verWarn()}</div></div>`;
 };
 App.renderTabbar = () => {
   const r = App.route.name; const items = App.navItems(); const pick = k => items.find(n=>n.r===k);

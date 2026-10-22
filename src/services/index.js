@@ -37,7 +37,7 @@ export const services = WS.services = {
     if(!/^https?:$/.test(location.protocol)) return;
     try {
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 2000);
-      const res = await fetch('/api/health', { signal: ctl.signal }); clearTimeout(t);
+      const res = await fetch('/api/health', { signal: ctl.signal, cache: 'no-store' }); clearTimeout(t);
       if(!res.ok) return;
       const info = config.server = await res.json();
       if(info.classroom) services.classroom = httpClassroomService;

@@ -28,7 +28,7 @@ npm run dev                 # http://localhost:5173, sửa mã là thấy ngay
 
 | Lệnh | Việc |
 |---|---|
-| `npm run dev` | Máy chủ nhỏ + Vite. Có khóa thì AI là Claude, không có thì AI giả lập |
+| `npm run dev` | Máy chủ nhỏ + Vite, tự khởi động lại khi mã máy chủ đổi. Có khóa thì AI là Claude, không có thì AI giả lập |
 | `npm run build` | Dựng `dist/ws-studio.html`: một tệp tự đủ, bấm đúp mở bằng `file://`, luôn chạy AI giả lập. `dist/` được đưa lên git để `chay.bat` chạy ngay không cần dựng, nên nhớ dựng lại trước khi commit |
 | `npm start` | Dựng rồi chạy bản dựng qua máy chủ (có Claude) |
 | `npm test` | Dựng rồi chạy 259 kiểm tra t1–t8 (cần `pip install playwright` và Chromium; đặt `WS_CHROME` nếu dùng trình duyệt riêng) |
@@ -52,7 +52,7 @@ Giáo viên thấy danh sách học sinh tự cập nhật, bấm vào từng em
 
 ## Số phiên bản
 
-Mỗi lần cập nhật tăng `VERSION` trong `src/version.js` thêm 1 và ghi một dòng vào `NOTE`. Số này hiện ở chân thanh bên, ngay dưới "Nạp dữ liệu mẫu" và "Reset", để biết đang chạy bản nào.
+Mỗi lần cập nhật tăng `VERSION` trong `src/version.js` thêm 1 và ghi một dòng vào `NOTE`. Số này hiện ở chân thanh bên, ngay dưới "Nạp dữ liệu mẫu" và "Reset", để biết đang chạy bản nào. Máy chủ cũng báo phiên bản của nó qua `/api/health` (và in ở dòng đầu cửa sổ máy chủ); nếu khác phiên bản trang, chân thanh bên hiện thêm "máy chủ bản X" màu đỏ: đóng mọi cửa sổ máy chủ (hoặc `taskkill /F /IM node.exe`) rồi chạy lại.
 
 ## Cấu trúc
 

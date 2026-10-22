@@ -5,7 +5,7 @@
   "type": "module",
   "description": "ws-studio: soạn, kiểm tra tiêu chuẩn, duyệt và xuất phiếu bài tập",
   "scripts": {
-    "dev": "node server/index.js --dev",
+    "dev": "node --watch-path=server --watch-path=src/shared --watch-path=src/version.js server/index.js --dev",
     "build": "vite build",
     "start": "vite build && node server/index.js",
     "test": "vite build && python3 tests/run_all.py",

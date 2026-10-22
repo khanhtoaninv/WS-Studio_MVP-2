@@ -18,13 +18,15 @@ const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_A
 const needLibs = (e) => { console.error('\n[!] Thiếu thư viện' + (e && e.message ? ` (${e.message.split('\n')[0]})` : '') + '.\n    Chạy:  npm install\n    rồi chạy lại. Dùng chay.bat thì nó tự cài.\n'); process.exit(1); };
 const claude = HAS_KEY ? await import('./claude.js').catch(needLibs) : null;
 const classroom = await import('./classroom.js');
+const { VERSION } = await import('../src/version.js');
+const STARTED = Date.now();
 
 const readJson = (req) => new Promise((resolve, reject) => {
   let raw = ''; req.setEncoding('utf8');
   req.on('data', c => { raw += c; if(raw.length > 2_000_000) reject(Object.assign(new Error('Yêu cầu quá lớn'), { status: 413 })); });
   req.on('end', () => { try { resolve(JSON.parse(raw || '{}')); } catch { reject(Object.assign(new Error('JSON không hợp lệ'), { status: 400 })); } });
 });
-const send = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(body)); };
+const send = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); };
 
 const routes = {
   'POST /api/ai/generate': (b) => claude.generate(b),
@@ -33,7 +35,8 @@ const routes = {
 };
 
 async function api(req, res){
-  if(req.method === 'GET' && req.url === '/api/health') return send(res, 200, { ok: true, ai: claude ? 'claude' : 'mock', model: claude ? claude.MODEL : null, classroom: true });
+  if(req.method === 'GET' && req.url === '/api/health') return send(res, 200, { ok: true, ai: claude ? 'claude' : 'mock', model: claude ? claude.MODEL : null, classroom: true,
+    version: VERSION, dev: DEV, dir: root, pid: process.pid, startedAt: STARTED });
   const cls = classroom.routes[`${req.method} ${req.url}`];
   if(cls){
     try { send(res, 200, await cls(await readJson(req), { port: PORT })); }
@@ -86,6 +89,6 @@ server.on('error', (err) => {
   throw err;
 });
 server.listen(PORT, () => {
-  console.log(`ws-studio: http://localhost:${PORT}  (${DEV ? 'dev' : 'bản dựng'}, AI: ${claude ? 'Claude ' + claude.MODEL : 'giả lập, chưa có ANTHROPIC_API_KEY'})`);
+  console.log(`ws-studio phiên bản ${VERSION}: http://localhost:${PORT}  (${DEV ? 'dev' : 'bản dựng'}, thư mục ${root}, AI: ${claude ? 'Claude ' + claude.MODEL : 'giả lập, chưa có ANTHROPIC_API_KEY'})`);
   const lan = classroom.lanUrls(PORT); if(lan.length) console.log(`Học sinh vào làm bài: ${lan.join('  ')}`);
 });
