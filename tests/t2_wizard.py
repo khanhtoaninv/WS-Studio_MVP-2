@@ -19,6 +19,15 @@ r.p.click('[data-a="wzNext"]'); r.p.wait_for_timeout(200)
 t = r.text(); r.check('Mức lấp 2 trang A4' in t, 'Bước Khối bài tự dàn và hiện mức lấp trang (D-98)')
 m = r.js("(()=>{const w=WS.S.session.ui.wiz; const m=WS.measurePlan(w); return {pct:m.fill/w.cfg.pages, pages:m.pages}})()")
 r.check(0.88 <= m['pct'] <= 1.0 and m['pages'] <= 2, f"Mức lấp đo bằng viewer {m['pct']:.2f} trong 90–100%, không quá 2 trang (D-133)")
+r.check('Phủ mục tiêu lesson' in t and '3/3 mục tiêu có bài luyện' in t, 'Bước Khối bài có bảng phủ mục tiêu, đủ 3/3 (D-136)')
+cov = r.js("""(()=>{ const out=[]; WS.S.state.curricula.forEach(c=>c.levels.forEach(l=>l.units.forEach(u=>u.lessons.forEach(ls=>{ if(!ls.objectives.length) return;
+  [1,2,3].forEach(pg=>[0,1].forEach(salt=>{ const w={cfg:{lessonId:ls.id, pages:pg, title:'', themeId:null, multi:false, extra:[]}, blocks:WS.AI.planBlocks(ls.id,pg,salt).blocks};
+    const L=WS.Q.lesson(ls.id); const miss=WS.AI.coverage(L,w.blocks).filter(o=>!o.blocks.length).length;
+    const st=w.blocks.map(b=>WS.AI.STAGE[b.type]); const sorted=st.every((x,i)=>!i||st[i-1]<=x);
+    const adj=w.blocks.some((b,i)=>i&&w.blocks[i-1].type===b.type);
+    out.push({ls:ls.id, pg, miss, sorted, adj, why:w.blocks.every(b=>/Mục tiêu|ôn tổng hợp/.test(b.reason))}); })); })))); return out; })()""")
+r.check(all(x['miss']==0 for x in cov if x['pg']>=2), 'Dàn khối tự động phủ mọi mục tiêu của mọi lesson (2–3 trang) (D-136): ' + str([x['ls'] for x in cov if x['miss'] and x['pg']>=2][:4]))
+r.check(all(x['sorted'] and not x['adj'] and x['why'] for x in cov), 'Khối xếp từ nhận biết đến vận dụng, không lặp loại liền nhau, lý do nêu mục tiêu (D-136)')
 r.check('Không sinh được ở lesson này' in t and 'Biến đổi từ' in t, 'Báo rõ loại bài thiếu dữ liệu (word_form ở Pre-A1)')
 b1 = r.js("JSON.stringify(WS.S.session.ui.wiz.blocks.map(b=>b.type+b.count))")
 r.p.click('[data-a="wzReplan"]'); r.p.wait_for_timeout(150)
@@ -26,6 +35,10 @@ b2 = r.js("JSON.stringify(WS.S.session.ui.wiz.blocks.map(b=>b.type+b.count))")
 r.check(b1 != b2, 'Dàn bộ khác cho bộ khác')
 r.shot('t2_step2')
 # S1 manual: clear, add mcq x4, fill x5, tfng x4
+r.p.click('[data-a="wzClear"]'); r.p.wait_for_timeout(100)
+r.check('0/3 mục tiêu có bài luyện' in r.text() and r.p.locator('[data-a="wzAddObj"]').count()==3, 'Xóa hết khối: bảng phủ báo 0/3, mỗi mục tiêu có nút thêm khối (D-136)')
+r.p.click('[data-a="wzAddObj"][data-o="1"]'); r.p.wait_for_timeout(120)
+r.check(r.js("WS.S.session.ui.wiz.blocks.length==1 && WS.S.session.ui.wiz.blocks[0].objectives[0]==1") and '1/3 mục tiêu' in r.text(), 'Thêm khối cho một mục tiêu: khối mới gắn đúng mục tiêu (D-136)')
 r.p.click('[data-a="wzClear"]'); r.p.wait_for_timeout(100)
 for t_,n in [('mcq',4),('fill_blank',5),('tfng',4)]:
     r.p.click('[data-a="wzAdd"]'); r.p.wait_for_timeout(80)

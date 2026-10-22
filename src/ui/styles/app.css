@@ -482,3 +482,7 @@ textarea.inp{height:auto;padding:8px 10px;resize:vertical;line-height:1.45}
 .pm-head{flex:none;background:var(--surface-2);border-radius:2px}
 .pm-seg{flex:none;background:var(--accent-soft);color:var(--accent-2);border-radius:2px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;min-height:4px;overflow:hidden}
 .pm-no{position:absolute;bottom:-1px;right:3px;font-size:9px;color:var(--ink-3)}
+/* D-136: bảng phủ mục tiêu lesson */
+.cov-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border-radius:7px;font-size:13.5px}
+.cov-row.miss{background:var(--warn-soft)}
+.cov-miss{color:var(--warn);display:flex;gap:8px;align-items:center}

@@ -40,7 +40,7 @@ export function createClaudeAIService(info){
   const model = info.model || 'Claude';
   const generate = async (lessonId, type, o = {}) => {
     const w = await post('/api/ai/generate', { ...lessonContext(lessonId, type, o.themeId), type,
-      count: o.count, difficulty: o.difficulty || 'medium', note: o.note || '', blockIndex: o.blockIndex || 0, variant: o.variant || null });
+      count: o.count, difficulty: o.difficulty || 'medium', note: o.note || '', focus: o.focus || [], blockIndex: o.blockIndex || 0, variant: o.variant || null });
     return { draft: applyExercise(skeleton(type, o), type, w), log: [`Sinh bằng Claude (${model}).`] };
   };
   return {

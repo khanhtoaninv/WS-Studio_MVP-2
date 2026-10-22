@@ -60,6 +60,7 @@ export async function generate(b){
   const lines = [contextBlock(b), '',
     `Write one exercise with exactly ${count} questions. Difficulty: ${b.difficulty}.`,
     b.note && `Teacher's note (follow it if it stays inside the lesson): ${b.note}`,
+    b.focus && b.focus.length && `Focus this exercise on these lesson objectives: ${b.focus.join('; ')}`,
     b.variant && `This is option ${b.variant.k} of ${b.variant.of}; make it clearly different from the other options.`,
     b.theme && `This is exercise number ${b.blockIndex + 1} of the worksheet; use a fresh scene of the theme story.`,
     'Leave passage, wordBank or extraRight empty when this type does not use them.'];

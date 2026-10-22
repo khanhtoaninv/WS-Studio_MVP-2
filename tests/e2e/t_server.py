@@ -22,7 +22,7 @@ def run(fail):
             b = pw.chromium.launch(**({'executable_path':os.environ['WS_CHROME']} if os.environ.get('WS_CHROME') else {}))
             p = b.new_page(); toasts = []
             p.goto('http://127.0.0.1:5199/'); p.wait_for_selector('#main'); p.wait_for_timeout(300)
-            r = p.evaluate("""async () => { const S=WS.services; const g = await S.ai.generate('ex1-l2-u1-1','mcq',{count:4, themeId:'space'});
+            r = p.evaluate("""async () => { const S=WS.services; const g = await S.ai.generate('ex1-l2-u1-1','mcq',{count:4, themeId:'space', focus:['Use adverbs of frequency']});
               const ex = {id:'x', type:'mcq', scope:{lessonIds:['ex1-l2-u1-1']}, themeId:'space', draft:g.draft};
               const vs = await S.ai.questionVariants(ex, g.draft.questions[0].id, ['easier'], 3);
               const exv = await S.ai.exerciseVariants(ex, 2);
@@ -51,6 +51,7 @@ check(not r['errors'], 'Bài Claude trả về qua bộ kiểm tra không lỗi:
 check(all(l['model']=='claude-opus-5-5' and l['fallbacks']=='default' and 'server-side-fallback-2026-07-01' in (l['beta'] or '') for l in log), 'Mọi lệnh gửi model, fallbacks "default" và beta header đúng')
 check(all(l['hasSchema'] and l['effort']=='medium' for l in log), 'Mọi lệnh ép JSON schema, effort medium')
 check(any('Daily routines' in (l['prompt'] or '') for l in log), 'Lời nhắc có ngữ cảnh lesson')
+check(any('Focus this exercise on these lesson objectives: Use adverbs of frequency' in (l['prompt'] or '') for l in log), 'Lời nhắc nêu mục tiêu lesson của khối (D-136)')
 h, r, log = run(True)
 print('Claude API lỗi 500')
 check(r['kind']=='claude' and r['n']>=1 and 'Claude' not in r['log'][0], 'Lỗi API: tự quay về AI giả lập, vẫn có bài')

@@ -243,33 +243,73 @@ AI.suggestLayout = (type, d, hasImage) => {
   return {layout:'L1', reason:'Một cột chạy một mạch là dễ đọc nhất.'};
 };
 
-/* D-98: plan blocks to fill pages */
+/* D-136: mục tiêu lesson → loại kỹ năng; loại bài → kỹ năng luyện được và chặng (1 nhận biết, 2 luyện có hỗ trợ, 3 vận dụng) */
+AI.KINDS = {vocab:'Từ vựng', grammar:'Ngữ pháp', sentence:'Nói, viết câu', reading:'Đọc hiểu'};
+AI.TYPE_KINDS = {matching:['vocab'], mcq:['vocab','grammar'], fill_blank:['vocab','grammar'], word_form:['vocab','grammar'], ordering:['grammar','sentence'],
+  cloze_mcq:['reading','vocab'], tfng:['reading'], rewrite:['grammar','sentence'], short_answer:['reading','sentence']};
+AI.KIND_TYPES = {vocab:['matching','mcq','fill_blank','word_form','cloze_mcq'], grammar:['fill_blank','ordering','mcq','word_form','rewrite'],
+  sentence:['ordering','short_answer','rewrite'], reading:['tfng','cloze_mcq','short_answer']};
+AI.STAGE = {matching:1, mcq:1, fill_blank:2, word_form:2, ordering:2, cloze_mcq:2, tfng:3, rewrite:3, short_answer:3};
+AI.STAGE_LABEL = {1:'Nhận biết', 2:'Luyện có hỗ trợ', 3:'Vận dụng'};
+AI.objectiveKinds = text => {
+  const t = String(text).toLowerCase(); const verb = (t.match(/^[a-z]+/)||[''])[0];
+  const gram = /\b(this is|that|she is|he is|there (is|are)|present|past|perfect|continuous|tense|ever|never|when|while|with he\/she|adverbs?|-tion|-ment)\b/.test(t);
+  const lex = /\b(words?|nouns?|adjectives?|colou?rs?|objects|members|food|drink|vocabulary|famil(y|ies))\b/.test(t);
+  let k;
+  if(['use','form','contrast'].includes(verb)) k = ['grammar'].concat(lex?['vocab']:[]);
+  else if(['say','ask','answer','respond','talk','tell','describe','write'].includes(verb)) k = ['sentence'].concat(gram?['grammar']:lex?['vocab']:[]);
+  else if(['read','understand','find'].includes(verb)) k = ['reading'];
+  else k = gram ? ['grammar','vocab'] : ['vocab'];
+  return k;
+};
+AI.objectives = lesson => (lesson.objectives||[]).map((t,i)=>({i, t, kinds:AI.objectiveKinds(t)}));
+/* Mục tiêu một khối luyện: khối do hệ thống dàn ghi sẵn (b.objectives); khối tay thì suy từ loại bài */
+AI.blockObjectives = (lesson, b) => {
+  if(b.fromLib) return [];
+  if(Array.isArray(b.objectives)) return b.objectives;
+  return AI.objectives(lesson).filter(o=>o.kinds.some(k=>AI.TYPE_KINDS[b.type].includes(k))).map(o=>o.i);
+};
+AI.coverage = (lesson, blocks) => AI.objectives(lesson).map(o=>({...o, blocks:blocks.map((b,j)=>AI.blockObjectives(lesson,b).includes(o.i)?j:-1).filter(j=>j>=0)}));
+AI.blockFocus = (lesson, b) => AI.blockObjectives(lesson, b).map(i=>lesson.objectives[i]).filter(Boolean);
+
+/* D-98 + D-136: dàn khối phủ mục tiêu lesson trước, rồi lấp số trang; xếp từ nhận biết đến vận dụng */
 AI.planBlocks = (lessonId, pages, salt=0) => {
   const lesson = Q.lesson(lessonId); const r = U.rng(`plan|${lessonId}|${pages}|${salt}`);
-  const target = pages*AI.PAGE_H; const blocks=[]; let total=0;
+  const target = pages*AI.PAGE_H; const chosen=[]; let total=0;
   const types = WS.TYPE_ORDER.filter(t=>AI.available(lesson,t).ok);
   const unusable = WS.TYPE_ORDER.filter(t=>!AI.available(lesson,t).ok).map(t=>({type:t, reason:AI.available(lesson,t).reason}));
-  const order = [];
-  if(types.includes('matching') && lesson.vocab.length>=6 && r()<.8) order.push('matching');
-  U.shuffle(types.filter(t=>!order.includes(t)), r).forEach(t=>order.push(t));
-  const reasons = {
-    matching:`Lesson có ${lesson.vocab.length} từ vựng mới nên mở đầu bằng nối từ.`, mcq:'Củng cố nghĩa từ trong câu với lựa chọn có sẵn.',
-    fill_blank:'Luyện viết từ trọng tâm trong ngữ cảnh câu.', ordering:`Luyện cấu trúc "${lesson.grammar[0]}" qua sắp xếp câu.`,
-    tfng:'Đoạn văn của lesson phù hợp cho đọc hiểu nhận định.', cloze_mcq:'Đọc đoạn văn và chọn từ, ôn từ vựng trong ngữ cảnh dài.',
-    word_form:'Lesson có họ từ nên thêm biến đổi từ.', rewrite:'Viết lại câu để luyện ngữ pháp trọng tâm.', short_answer:'Trả lời ngắn để kiểm tra hiểu đoạn văn.'};
-  for(const t of order){
-    if(total >= target*0.92) break;
+  const isPassage = t => ['tfng','cloze_mcq','short_answer'].includes(t);
+  const make = t => {
     const std=Q.standard(t), av=AI.available(lesson,t);
-    let count = Math.max(std.minQ, Math.min(av.max, std.minQ + Math.floor(r()*(av.max-std.minQ+1))));
-    const diff = U.pick(['easy','medium','medium','hard'], r);
-    const fake = {questions:new Array(count).fill(0), passage:['tfng','cloze_mcq','short_answer'].includes(t)?lesson.passages[0]:'', wordBank:t==='fill_blank'&&diff!=='hard'?[1]:[]};
+    const count = Math.max(std.minQ, Math.min(av.max, std.minQ + Math.floor(r()*(av.max-std.minQ+1))));
+    const st = AI.STAGE[t]; const difficulty = st===1 ? 'easy' : st===2 ? 'medium' : (r()<.35 ? 'hard' : 'medium');
+    const fake = {questions:new Array(count).fill(0), passage:isPassage(t)?lesson.passages[0]:'', wordBank:t==='fill_blank'&&difficulty!=='hard'?[1]:[]};
     const lay = AI.suggestLayout(t, fake, false);
-    let h = AI.estimateHeight(t, fake, lay.layout);
-    while(total+h > target && count>std.minQ){ count--; fake.questions.length=count; h=AI.estimateHeight(t,fake,lay.layout); }
-    if(total+h > target*1.0 && blocks.length) continue;
-    blocks.push({id:U.uid('b'), type:t, count, difficulty:diff, explanations:true, note:'', reason:reasons[t], layout:lay.layout, layoutReason:lay.reason});
-    total += h;
+    return {id:U.uid('b'), type:t, count, difficulty, explanations:true, note:'', objectives:[], layout:lay.layout, layoutReason:lay.reason, h:AI.estimateHeight(t, fake, lay.layout)};
+  };
+  // 1. mỗi mục tiêu có ít nhất một khối; hết chỗ thì gắn vào khối sẵn có cùng kỹ năng
+  for(const o of AI.objectives(lesson)){
+    const pref = [...new Set(o.kinds.flatMap(k=>AI.KIND_TYPES[k]))].filter(t=>types.includes(t) && !chosen.some(c=>c.type===t));
+    const share = chosen.find(c=>AI.TYPE_KINDS[c.type].includes(o.kinds[0])) || chosen.find(c=>AI.TYPE_KINDS[c.type].some(k=>o.kinds.includes(k)));
+    let b = null;
+    if(pref.length){ const t = pref[r()<.65 || pref.length<2 ? 0 : 1]; const nb = make(t); if(!(share && total+nb.h > target)){ b = nb; chosen.push(b); total += b.h; } }
+    if(!b) b = share;
+    if(b) b.objectives.push(o.i);
   }
+  // 2. lấp số trang bằng loại bài còn lại, gắn các mục tiêu cùng kỹ năng
+  for(const t of U.shuffle(types.filter(t=>!chosen.some(c=>c.type===t)), r)){
+    if(total >= target*0.92) break;
+    const b = make(t); if(total+b.h > target && chosen.length) continue;
+    b.objectives = AI.objectives(lesson).filter(o=>o.kinds.some(k=>AI.TYPE_KINDS[t].includes(k))).map(o=>o.i);
+    chosen.push(b); total += b.h;
+  }
+  // 3. bớt câu cho vừa trang
+  for(const b of chosen.slice().reverse()){ const std=Q.standard(b.type); const fake={questions:new Array(b.count).fill(0), passage:isPassage(b.type)?lesson.passages[0]:'', wordBank:b.type==='fill_blank'&&b.difficulty!=='hard'?[1]:[]};
+    while(total > target && b.count>std.minQ){ b.count--; fake.questions.length=b.count; const h=AI.estimateHeight(b.type,fake,b.layout); total += h-b.h; b.h=h; } }
+  // 4. từ nhận biết đến vận dụng (sắp xếp ổn định)
+  const blocks = chosen.map((b,k)=>({b,k})).sort((x,y)=>AI.STAGE[x.b.type]-AI.STAGE[y.b.type] || x.k-y.k).map(x=>x.b);
+  blocks.forEach(b=>{ b.objectives.sort((a,c)=>a-c); const objs = b.objectives.map(i=>`Mục tiêu ${i+1}: ${lesson.objectives[i]}`);
+    b.reason = `${AI.STAGE_LABEL[AI.STAGE[b.type]]} · ${objs.length ? objs.join('; ') : 'Lấp số trang, ôn tổng hợp'}.`; delete b.h; });
   const fill = total/target;
   return {blocks, fill, total, target, short: fill<0.9, unusable};
 };

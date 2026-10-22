@@ -32,7 +32,7 @@ function fitPlan(w){
     if(m.pages > target){
       const cands = w.blocks.filter(b=>!b.fromLib && b.count>Q.standard(b.type).minQ);
       if(cands.length){ cands.sort((a,b)=>b.count-a.count)[0].count--; last='dec'; continue; }
-      if(w.blocks.length>1){ w.blocks.pop(); last='dec'; continue; }
+      const drop = dropIndex(w, lesson); if(drop>=0){ w.blocks.splice(drop,1); last='dec'; continue; }
       break;
     }
     if(m.fill < target*0.9 && last!=='dec'){
@@ -42,6 +42,23 @@ function fitPlan(w){
     }
     break;
   }
+}
+/* Khối bỏ được khi quá trang: khối cuối cùng mà bỏ đi không làm mục tiêu nào mất bài luyện (D-136) */
+function dropIndex(w, lesson){
+  if(w.blocks.length<2) return -1;
+  const covered = bl => new Set(AI.coverage(lesson, bl).filter(o=>o.blocks.length).map(o=>o.i));
+  const all = covered(w.blocks);
+  for(let i=w.blocks.length-1;i>=0;i--){ const rest=w.blocks.filter((_,j)=>j!==i); if(covered(rest).size===all.size) return i; }
+  return -1;
+}
+/* Bảng phủ mục tiêu lesson: mục tiêu nào đã có bài luyện, bao nhiêu câu (D-136) */
+function coverageCard(w, lesson){
+  const cov = AI.coverage(lesson, w.blocks); if(!cov.length) return '';
+  const ok = cov.filter(o=>o.blocks.length).length;
+  return `<div class="card cov-card"><div class="row"><h3 style="margin:0">Phủ mục tiêu lesson</h3><span class="spacer"></span>${UI.chip(`${ok}/${cov.length} mục tiêu có bài luyện`, ok===cov.length?'green':'orange')}</div>
+    <div class="stack" style="margin-top:8px;gap:6px">${cov.map(o=>{ const n=o.blocks.reduce((a,j)=>a+(w.blocks[j].count||0),0);
+      return `<div class="cov-row ${o.blocks.length?'':'miss'}" data-obj="${o.i}"><b class="muted">${o.i+1}</b><span>${esc(o.t)} <span class="small muted">· ${o.kinds.map(k=>esc(AI.KINDS[k])).join(', ')}</span></span>
+        ${o.blocks.length?`<span class="small">${o.blocks.map(j=>'Bài '+(j+1)).join(', ')} · ${n} câu</span>`:`<span class="small cov-miss">Chưa có bài luyện ${UI.btn('＋ Thêm khối cho mục tiêu này',{a:'wzAddObj', size:'xs', data:{o:o.i}})}</span>`}</div>`; }).join('')}</div></div>`;
 }
 /* Sơ đồ trang: mỗi trang A4 một ô, các bài xếp theo chiều cao thật */
 function pageMap(m){
@@ -144,6 +161,7 @@ function step2(w){
   return `<div class="stack">${fillBar(w)}
     <div class="row"><h3>Khối bài</h3><span class="muted small">${w.manual?'Bạn đã sửa tay; hệ thống không tự dàn lại.':'Hệ thống tự dàn theo số trang. Sửa bất kỳ ô nào để dàn tay.'}</span><span class="spacer"></span>${UI.btn('Xóa hết',{a:'wzClear',size:'sm',kind:'ghost'})}${UI.btn('＋ Thêm từ kho bài',{a:'wzFromLib',size:'sm'})}${UI.btn('＋ Thêm khối',{a:'wzAdd',size:'sm'})}</div>
     <div class="stack">${rows || UI.empty('Chưa có khối nào','Thêm khối hoặc bấm Dàn bộ khác để hệ thống đề xuất.')}</div>
+    ${coverageCard(w, lesson)}
     ${unusable.length?`<div class="small muted">Không sinh được ở lesson này: ${unusable.map(t=>`<span data-tip="${esc(AI.available(lesson,t).reason)}" style="border-bottom:1px dotted">${esc(WS.TYPES[t].label)}</span>`).join(', ')}.</div>`:''}
     <div class="wiz-foot">${UI.btn('← Thông tin & phạm vi',{a:'wzGo', kind:'ghost', data:{s:1}})}<span class="spacer"></span>${reason?`<span class="why">${esc(reason)}</span>`:''}${UI.btn('Tiếp: Bố cục →',{a:'wzNext', kind:'primary', disabled:!!reason, reason})}</div></div>`;
 }
@@ -200,7 +218,7 @@ WS.runGeneration = async (wsId, blocks, cfg) => {
     if(b.fromLib){ for(let k=0;k<7;k++) st.steps[k]='ok'; st.status='ok'; st.log.push('Ghim bài từ kho (không sinh lại).'); S.commit(()=>{ const ex=Q.ex(b.fromLib); ws.items.push({id:U.uid('it'), exerciseId:ex.id, pinnedVersionNo:R.lastDone(ex).no, local:false, layout:null}); }); continue; }
     const lessonId = lessons[i % lessons.length];
     for(let k=0;k<5;k++){ setStep(k,'run'); await wait(); setStep(k,'ok'); }
-    const gen = await WS.services.ai.generate(lessonId, b.type, {count:b.count, difficulty:b.difficulty, seed:wsId+'|'+i+'|'+Date.now(), themeId:cfg.themeId, layout:b.layout, note:b.note, explanations:b.explanations, blockIndex:i});
+    const gen = await WS.services.ai.generate(lessonId, b.type, {count:b.count, difficulty:b.difficulty, seed:wsId+'|'+i+'|'+Date.now(), themeId:cfg.themeId, layout:b.layout, note:b.note, explanations:b.explanations, blockIndex:i, focus:lessonId===cfg.lessonId?AI.blockFocus(Q.lesson(lessonId), b):[]});
     st.log.push(...gen.log);
     const lesson = Q.lesson(lessonId);
     const faultNotes = AI.injectFault(gen.draft, b.type, lesson, fault);
@@ -253,7 +271,13 @@ Object.assign(WS.ACT, {
   wzReplan: () => { const w=wiz(); w.salt++; w.manual=false; planNow(w); rer(); UI.toast('Đã dàn một bộ khối bài khác.'); },
   wzClear: () => { const w=wiz(); w.blocks=[]; w.manual=true; rer(); },
   wzAdd: () => { const w=wiz(); const lesson=Q.lesson(w.cfg.lessonId); const t=WS.TYPE_ORDER.find(t=>AI.available(lesson,t).ok && !w.blocks.some(b=>b.type===t)) || 'mcq'; w.blocks.push({id:U.uid('b'), type:t, count:Q.standard(t).minQ, difficulty:'medium', explanations:true, note:'', reason:'Khối do bạn thêm.', layout:WS.S.state.layoutDefaults[t]||'L1'}); w.manual=true; rer(); },
-  wzB: el => { const w=wiz(), b=w.blocks[+el.dataset.i], k=el.dataset.k; b[k] = el.type==='checkbox'?el.checked : k==='count'?(+el.value||0) : el.value; if(k==='type'){ b.count=Math.max(Q.standard(b.value||b.type).minQ, Math.min(b.count, Q.standard(b.type).maxQ)); b.reason='Khối do bạn chỉnh.'; b.layout=S.state.layoutDefaults[b.type]||'L1'; } w.manual=true; rer(); },
+  wzAddObj: el => { const w=wiz(); const lesson=Q.lesson(w.cfg.lessonId); const o=AI.objectives(lesson)[+el.dataset.o];
+    const cand = [...new Set(o.kinds.flatMap(k=>AI.KIND_TYPES[k]))].filter(t=>AI.available(lesson,t).ok);
+    const t = cand.find(t=>!w.blocks.some(b=>b.type===t)) || cand[0];
+    if(!t) return UI.toast('Lesson chưa đủ dữ liệu để sinh loại bài luyện mục tiêu này.');
+    const st=AI.STAGE[t]; const b = {id:U.uid('b'), type:t, count:Q.standard(t).minQ, difficulty:st===1?'easy':'medium', explanations:true, note:'', objectives:[o.i], reason:`${AI.STAGE_LABEL[st]} · Mục tiêu ${o.i+1}: ${o.t}.`, layout:S.state.layoutDefaults[t]||'L1'};
+    let k = w.blocks.findIndex(x=>!x.fromLib && AI.STAGE[x.type]>st); if(k<0) k=w.blocks.length; w.blocks.splice(k,0,b); w.manual=true; rer(); UI.toast(`Đã thêm khối ${WS.TYPES[t].label} cho mục tiêu ${o.i+1}.`); },
+  wzB: el => { const w=wiz(), b=w.blocks[+el.dataset.i], k=el.dataset.k; b[k] = el.type==='checkbox'?el.checked : k==='count'?(+el.value||0) : el.value; if(k==='type'){ b.count=Math.max(Q.standard(b.value||b.type).minQ, Math.min(b.count, Q.standard(b.type).maxQ)); b.reason='Khối do bạn chỉnh.'; b.layout=S.state.layoutDefaults[b.type]||'L1'; delete b.objectives; } w.manual=true; rer(); },
   wzMv: el => { const w=wiz(), i=+el.dataset.i, j=i+(+el.dataset.d); if(j<0||j>=w.blocks.length) return; [w.blocks[i],w.blocks[j]]=[w.blocks[j],w.blocks[i]]; w.manual=true; rer(); },
   wzDel: el => { const w=wiz(); w.blocks.splice(+el.dataset.i,1); w.manual=true; rer(); },
   wzLay: el => { const b=wiz().blocks[+el.dataset.i]; b.layout=el.dataset.l; rer(); },
