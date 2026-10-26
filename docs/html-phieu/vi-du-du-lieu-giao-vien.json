@@ -1,0 +1,728 @@
+{
+  "meta": {
+    "code": "WS-0008",
+    "version": 1,
+    "kind": "teacher",
+    "title": "Showcase · A Day in Space",
+    "lesson": "Level 2 · U1 · Lesson 1.1 Daily routines",
+    "lessonFull": "Explorers English 1 · Level 2 · U1 · 1.1 Daily routines",
+    "exportedAt": "2026-10-26T09:55:29.035Z",
+    "exportedBy": "Nguyễn Thị Lan",
+    "theme": {
+      "name": "Space Explorers",
+      "emoji": "🚀"
+    },
+    "pagesTarget": 4,
+    "scope": {
+      "curriculum": "Explorers English 1",
+      "curriculumVersion": "2.1",
+      "levelId": "ex1-l2",
+      "unitId": "ex1-l2-u1",
+      "lessonIds": [
+        "ex1-l2-u1-1"
+      ]
+    },
+    "standards": [
+      "STD-MAT@1.0",
+      "STD-MCQ@1.2",
+      "STD-FIL@1.1",
+      "STD-ORD@1.0",
+      "STD-TFN@1.1",
+      "STD-CLZ@1.0",
+      "STD-WDF@1.0",
+      "STD-RWR@1.0",
+      "STD-SHA@1.0"
+    ]
+  },
+  "items": [
+    {
+      "id": "ex-f3cw11ekr",
+      "no": 1,
+      "type": "matching",
+      "title": "Match the words with Zed",
+      "instruction": "Match the words with the pictures.",
+      "layout": "L2",
+      "passage": "",
+      "wordBank": [],
+      "media": [
+        {
+          "id": "m-ap7rngekr",
+          "kind": "image",
+          "keyword": "morning routine",
+          "emoji": "⏰",
+          "hue": 220,
+          "style": 0,
+          "alt": "Illustration: morning routine",
+          "source": "giả lập",
+          "prompt": "flat illustration, morning routine, child-friendly",
+          "status": "ok"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q-a04laqekr",
+          "left": "usually",
+          "right": "🔁",
+          "explanation": "usually: most of the time"
+        },
+        {
+          "id": "q-qudlx1ekr",
+          "left": "lunch",
+          "right": "🍱",
+          "explanation": "lunch: food in the middle of the day"
+        },
+        {
+          "id": "q-0gcgmeekr",
+          "left": "morning",
+          "right": "🌅",
+          "explanation": "morning: early in the day"
+        },
+        {
+          "id": "q-k0qsyaekr",
+          "left": "evening",
+          "right": "🌆",
+          "explanation": "evening: late in the day"
+        },
+        {
+          "id": "q-rvhr90ekr",
+          "left": "never",
+          "right": "🚫",
+          "explanation": "never: not at any time"
+        },
+        {
+          "id": "q-3ohwx0ekr",
+          "left": "school",
+          "right": "🏫",
+          "explanation": "school: a place to learn"
+        }
+      ],
+      "rightList": [
+        "🚫",
+        "🌆",
+        "🏫",
+        "🌅",
+        "🔁",
+        "🍱"
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-ssanrneks",
+      "no": 2,
+      "type": "mcq",
+      "title": "Pick the best answer with Mia",
+      "instruction": "Choose the correct answer: A, B or C.",
+      "layout": "L1",
+      "passage": "",
+      "wordBank": [],
+      "media": [],
+      "questions": [
+        {
+          "id": "q-48mk7seks",
+          "stem": "I usually watch TV in the ___.",
+          "options": [
+            {
+              "id": "o0",
+              "text": "homework"
+            },
+            {
+              "id": "o1",
+              "text": "breakfast"
+            },
+            {
+              "id": "o2",
+              "text": "evening"
+            }
+          ],
+          "correctId": "o2",
+          "explanation": "\"evening\" makes the sentence correct."
+        },
+        {
+          "id": "q-fnjehfeks",
+          "stem": "They have lunch at ___.",
+          "options": [
+            {
+              "id": "o0",
+              "text": "teeth"
+            },
+            {
+              "id": "o1",
+              "text": "school"
+            },
+            {
+              "id": "o2",
+              "text": "lunch"
+            }
+          ],
+          "correctId": "o1",
+          "explanation": "\"school\" makes the sentence correct."
+        },
+        {
+          "id": "q-u61amveks",
+          "stem": "He goes to ___ by bus.",
+          "options": [
+            {
+              "id": "o0",
+              "text": "school"
+            },
+            {
+              "id": "o1",
+              "text": "evening"
+            },
+            {
+              "id": "o2",
+              "text": "morning"
+            }
+          ],
+          "correctId": "o0",
+          "explanation": "\"school\" makes the sentence correct."
+        },
+        {
+          "id": "q-zx66sdeks",
+          "stem": "I ___ do my homework.",
+          "options": [
+            {
+              "id": "o0",
+              "text": "always"
+            },
+            {
+              "id": "o1",
+              "text": "usually"
+            },
+            {
+              "id": "o2",
+              "text": "sometimes"
+            }
+          ],
+          "correctId": "o0",
+          "explanation": "\"always\" makes the sentence correct."
+        },
+        {
+          "id": "q-fg8luueks",
+          "stem": "Zed has ___ with his family.",
+          "options": [
+            {
+              "id": "o0",
+              "text": "breakfast"
+            },
+            {
+              "id": "o1",
+              "text": "school"
+            },
+            {
+              "id": "o2",
+              "text": "evening"
+            }
+          ],
+          "correctId": "o0",
+          "explanation": "\"breakfast\" makes the sentence correct."
+        }
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-tdrj6jekt",
+      "no": 3,
+      "type": "fill_blank",
+      "title": "Missing words with Bolt",
+      "instruction": "Fill in the blanks with the words in the box.",
+      "layout": "L4",
+      "passage": "",
+      "wordBank": [
+        "morning",
+        "breakfast",
+        "usually",
+        "evening",
+        "homework",
+        "breakfast",
+        "homework"
+      ],
+      "media": [],
+      "questions": [
+        {
+          "id": "q-zxe7bwekt",
+          "text": "Zed has ___ with his family.",
+          "accepted": [
+            "breakfast"
+          ],
+          "explanation": "The missing word is \"breakfast\"."
+        },
+        {
+          "id": "q-lqemw6ekt",
+          "text": "We have ___ at seven.",
+          "accepted": [
+            "breakfast"
+          ],
+          "explanation": "The missing word is \"breakfast\"."
+        },
+        {
+          "id": "q-tfw22tekt",
+          "text": "She brushes her teeth every ___.",
+          "accepted": [
+            "morning"
+          ],
+          "explanation": "The missing word is \"morning\"."
+        },
+        {
+          "id": "q-g4adblekt",
+          "text": "I always do my ___.",
+          "accepted": [
+            "homework"
+          ],
+          "explanation": "The missing word is \"homework\"."
+        },
+        {
+          "id": "q-h3hfirekt",
+          "text": "I usually watch TV in the ___.",
+          "accepted": [
+            "evening"
+          ],
+          "explanation": "The missing word is \"evening\"."
+        },
+        {
+          "id": "q-jbtsfgekt",
+          "text": "We ___ get up early.",
+          "accepted": [
+            "usually"
+          ],
+          "explanation": "The missing word is \"usually\"."
+        }
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-67pn0eekt",
+      "no": 4,
+      "type": "ordering",
+      "title": "Make sentences with Zed",
+      "instruction": "Put the words in the correct order to make sentences.",
+      "layout": "L1",
+      "passage": "",
+      "wordBank": [],
+      "media": [],
+      "questions": [
+        {
+          "id": "q-tlujcmekt",
+          "words": [
+            "at",
+            "to",
+            "Mia",
+            "nine",
+            "goes",
+            "bed"
+          ],
+          "punct": ".",
+          "answerText": "Mia goes to bed at nine.",
+          "explanation": "Correct order: Mia goes to bed at nine."
+        },
+        {
+          "id": "q-rkuipnekt",
+          "words": [
+            "goes",
+            "by",
+            "bus",
+            "school",
+            "He",
+            "to"
+          ],
+          "punct": ".",
+          "answerText": "He goes to school by bus.",
+          "explanation": "Correct order: He goes to school by bus."
+        },
+        {
+          "id": "q-k6p9duekt",
+          "words": [
+            "has",
+            "family",
+            "his",
+            "with",
+            "breakfast",
+            "Zed"
+          ],
+          "punct": ".",
+          "answerText": "Zed has breakfast with his family.",
+          "explanation": "Correct order: Zed has breakfast with his family."
+        },
+        {
+          "id": "q-h9mox3ekt",
+          "words": [
+            "have",
+            "They",
+            "at",
+            "lunch",
+            "school"
+          ],
+          "punct": ".",
+          "answerText": "They have lunch at school.",
+          "explanation": "Correct order: They have lunch at school."
+        }
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-ecq423eku",
+      "no": 5,
+      "type": "tfng",
+      "title": "Reading check with Mia",
+      "instruction": "Read the text. Write T (true), F (false) or NG (not given).",
+      "layout": "L3",
+      "passage": "Mia wakes up at six o'clock. She usually brushes her teeth and has breakfast at half past six. She goes to school at seven. She has lunch at school. In the afternoon, she always does her homework. In the evening, she sometimes watches TV. She never goes to bed late. She goes to bed at nine o'clock.",
+      "wordBank": [],
+      "media": [
+        {
+          "id": "m-5ujiheeku",
+          "kind": "audio",
+          "title": "Listen and read",
+          "transcript": "Mia wakes up at six o'clock. She usually brushes her teeth and has breakfast at half past six. She goes to school at seven. She has lunch at school. In the afternoon, she always does her homework. In the evening, she sometimes watches TV. She never goes to bed late. She goes to bed at nine o'clock.",
+          "voice": "en-GB",
+          "rate": 1,
+          "speakers": [],
+          "duration": 25,
+          "source": "giả lập",
+          "status": "ok"
+        },
+        {
+          "id": "m-ycidloeku",
+          "kind": "image",
+          "keyword": "space station",
+          "emoji": "🛰️",
+          "hue": 250,
+          "style": 1,
+          "alt": "Illustration: space station",
+          "source": "giả lập",
+          "prompt": "flat illustration, space station, child-friendly",
+          "status": "ok"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q-0wrjxyeku",
+          "statement": "Mia wakes up at six o'clock.",
+          "answer": "T",
+          "explanation": "The text says this."
+        },
+        {
+          "id": "q-lp9a7peku",
+          "statement": "She never watches TV.",
+          "answer": "F",
+          "explanation": "The text says something different."
+        },
+        {
+          "id": "q-ml0lo9eku",
+          "statement": "She goes to school by bus.",
+          "answer": "NG",
+          "explanation": "The text does not give this information."
+        },
+        {
+          "id": "q-4wql6beku",
+          "statement": "She has breakfast at seven.",
+          "answer": "F",
+          "explanation": "The text says something different."
+        },
+        {
+          "id": "q-fzqc4leku",
+          "statement": "She has a brother.",
+          "answer": "NG",
+          "explanation": "The text does not give this information."
+        }
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-n3fg6sekv",
+      "no": 6,
+      "type": "cloze_mcq",
+      "title": "Complete the text with Bolt",
+      "instruction": "Read the text and choose the correct word for each gap.",
+      "layout": "L3",
+      "passage": "Mia wakes up at six o'clock. She usually brushes her teeth and has {1} at half past six. She goes to school at seven. She has {2} at school. In the afternoon, she {3} does her homework. In the {4}, she sometimes watches TV. She {5} goes to bed late. She goes to bed at nine o'clock.",
+      "wordBank": [],
+      "media": [],
+      "questions": [
+        {
+          "id": "q-rw8ghwekv",
+          "n": 1,
+          "options": [
+            "breakfast",
+            "teeth",
+            "school"
+          ],
+          "correctIdx": 0,
+          "explanation": "Gap 1: \"breakfast\"."
+        },
+        {
+          "id": "q-5pa9aaekv",
+          "n": 2,
+          "options": [
+            "lunch",
+            "morning",
+            "school"
+          ],
+          "correctIdx": 0,
+          "explanation": "Gap 2: \"lunch\"."
+        },
+        {
+          "id": "q-a0t7rzekv",
+          "n": 3,
+          "options": [
+            "sometimes",
+            "never",
+            "always"
+          ],
+          "correctIdx": 2,
+          "explanation": "Gap 3: \"always\"."
+        },
+        {
+          "id": "q-85ro0wekv",
+          "n": 4,
+          "options": [
+            "school",
+            "teeth",
+            "evening"
+          ],
+          "correctIdx": 2,
+          "explanation": "Gap 4: \"evening\"."
+        },
+        {
+          "id": "q-1ijyhtekv",
+          "n": 5,
+          "options": [
+            "usually",
+            "always",
+            "never"
+          ],
+          "correctIdx": 2,
+          "explanation": "Gap 5: \"never\"."
+        }
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-vxz91cekv",
+      "no": 7,
+      "type": "word_form",
+      "title": "Make the right form with Zed",
+      "instruction": "Use the word in capitals to form a word that fits the gap.",
+      "layout": "L4",
+      "passage": "",
+      "wordBank": [],
+      "media": [],
+      "questions": [
+        {
+          "id": "q-q6qt0hekv",
+          "text": "She ___ to school at seven.",
+          "baseWord": "GO",
+          "accepted": [
+            "goes"
+          ],
+          "explanation": "GO → goes"
+        },
+        {
+          "id": "q-tzse2hekv",
+          "text": "She ___ her homework after school.",
+          "baseWord": "DO",
+          "accepted": [
+            "does"
+          ],
+          "explanation": "DO → does"
+        },
+        {
+          "id": "q-yhsaegekv",
+          "text": "Zed ___ TV in the evening.",
+          "baseWord": "WATCH",
+          "accepted": [
+            "watches"
+          ],
+          "explanation": "WATCH → watches"
+        },
+        {
+          "id": "q-jx1ykdekv",
+          "text": "I ___ get up at six.",
+          "baseWord": "USUAL",
+          "accepted": [
+            "usually"
+          ],
+          "explanation": "USUAL → usually"
+        },
+        {
+          "id": "q-u4g42kekv",
+          "text": "Mia ___ lunch at school.",
+          "baseWord": "HAVE",
+          "accepted": [
+            "has"
+          ],
+          "explanation": "HAVE → has"
+        }
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-9moqw8ekv",
+      "no": 8,
+      "type": "rewrite",
+      "title": "Sentence transformation with Mia",
+      "instruction": "Rewrite the sentences. Begin with the words given.",
+      "layout": "L1",
+      "passage": "",
+      "wordBank": [],
+      "media": [
+        {
+          "id": "m-4431qsekv",
+          "kind": "video",
+          "title": "A morning on the space station",
+          "caption": "Zed wakes up, brushes his teeth and has breakfast with Mia.",
+          "duration": 24,
+          "source": "giả lập",
+          "status": "ok",
+          "hue": 229
+        }
+      ],
+      "questions": [
+        {
+          "id": "q-qa5pvkekv",
+          "original": "We have breakfast at seven.",
+          "lead": "He",
+          "accepted": [
+            "He has breakfast at seven."
+          ],
+          "explanation": "Keep the same meaning with the new beginning."
+        },
+        {
+          "id": "q-gdnqkuekv",
+          "original": "They watch TV in the evening.",
+          "lead": "Mia",
+          "accepted": [
+            "Mia watches TV in the evening."
+          ],
+          "explanation": "Keep the same meaning with the new beginning."
+        },
+        {
+          "id": "q-h081bfekv",
+          "original": "I brush my teeth every morning.",
+          "lead": "Zed",
+          "accepted": [
+            "Zed brushes his teeth every morning."
+          ],
+          "explanation": "Keep the same meaning with the new beginning."
+        },
+        {
+          "id": "q-steahmekv",
+          "original": "I go to bed at nine o'clock.",
+          "lead": "She",
+          "accepted": [
+            "She goes to bed at nine o'clock."
+          ],
+          "explanation": "Keep the same meaning with the new beginning."
+        }
+      ],
+      "breakBefore": false
+    },
+    {
+      "id": "ex-uycebbekw",
+      "no": 9,
+      "type": "short_answer",
+      "title": "Read and answer with Bolt",
+      "instruction": "Read the text and answer the questions. Use no more than five words.",
+      "layout": "L3",
+      "passage": "Mia wakes up at six o'clock. She usually brushes her teeth and has breakfast at half past six. She goes to school at seven. She has lunch at school. In the afternoon, she always does her homework. In the evening, she sometimes watches TV. She never goes to bed late. She goes to bed at nine o'clock.",
+      "wordBank": [],
+      "media": [
+        {
+          "id": "m-ufjqfbekw",
+          "kind": "audio",
+          "title": "Dialogue",
+          "transcript": "Zed: What time do you wake up?\nMia: I wake up at six o'clock.\nZed: Do you have breakfast at home?\nMia: Yes, I always have breakfast with my family.",
+          "voice": "en-GB",
+          "rate": 1,
+          "speakers": [
+            "Zed",
+            "Mia"
+          ],
+          "duration": 13,
+          "source": "giả lập",
+          "status": "ok"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q-rdhht5ekw",
+          "question": "When does she go to school?",
+          "maxWords": 5,
+          "accepted": [
+            "at seven",
+            "seven o'clock",
+            "at seven o'clock"
+          ],
+          "explanation": "Model answer: at seven"
+        },
+        {
+          "id": "q-xqq00lekw",
+          "question": "Where does she have lunch?",
+          "maxWords": 5,
+          "accepted": [
+            "at school"
+          ],
+          "explanation": "Model answer: at school"
+        },
+        {
+          "id": "q-oufff5ekw",
+          "question": "What does she always do in the afternoon?",
+          "maxWords": 5,
+          "accepted": [
+            "her homework",
+            "homework",
+            "she does her homework"
+          ],
+          "explanation": "Model answer: her homework"
+        },
+        {
+          "id": "q-moiv0uekw",
+          "question": "What time does Mia wake up?",
+          "maxWords": 5,
+          "accepted": [
+            "at six",
+            "at six o'clock",
+            "six o'clock",
+            "six"
+          ],
+          "explanation": "Model answer: at six"
+        }
+      ],
+      "breakBefore": false
+    }
+  ],
+  "qfb": {
+    "correct": {
+      "img": {
+        "star": true,
+        "check": true,
+        "confetti": true,
+        "thumbs": true,
+        "trophy": true,
+        "smile": true
+      },
+      "snd": {
+        "chime": true,
+        "arp": true,
+        "pop": true,
+        "bell": true
+      }
+    },
+    "wrong": {
+      "img": {
+        "arrow": true,
+        "cloud": true,
+        "sprout": true,
+        "puzzle": true
+      },
+      "snd": {
+        "soft": true,
+        "bloop": true,
+        "hmm": true
+      }
+    },
+    "volume": 0.6,
+    "showText": true
+  },
+  "mediaFail": false
+}
