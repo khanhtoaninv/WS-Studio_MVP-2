@@ -29,6 +29,8 @@
 18. Yêu cầu phi chức năng
 19. Kiểm thử và nghiệm thu
 20. Câu lệnh mẫu giao cho AI
+21. Module M15. Làm bài trên lớp
+22. Các giai đoạn thực hiện
 - Phụ lục A. Bảng giá trị tham chiếu
 - Phụ lục B. Ví dụ dữ liệu
 - Phụ lục C. Bảng âm thanh phản hồi
@@ -50,8 +52,8 @@ Giá trị số (kích thước, màu, thời gian) ở Phụ lục A là **giá
 ### 0.2. Quy trình đề xuất
 
 1. **Khảo sát ứng dụng chủ** trước khi viết mã: công nghệ giao diện, cách lưu dữ liệu, mô hình phiếu bài hiện có, hệ thống phân quyền (có phân biệt giáo viên và học sinh không), cách xuất tệp (nếu có), ngôn ngữ giao diện, bộ kiểm thử.
-2. **Lập bảng đối chiếu**: với mỗi module M1–M14, ghi ứng dụng chủ đã có gì, thiếu gì, và sẽ làm theo cách nào. Gửi bảng này cho người phụ trách duyệt khi còn nghi ngờ.
-3. **Chọn module cần làm** (mục 1). Không bắt buộc làm hết; làm theo thứ tự phụ thuộc.
+2. **Lập bảng đối chiếu**: với mỗi module M1–M15, ghi ứng dụng chủ đã có gì, thiếu gì, và sẽ làm theo cách nào. Gửi bảng này cho người phụ trách duyệt khi còn nghi ngờ.
+3. **Chọn module và giai đoạn cần làm** (mục 1 và 22). Không bắt buộc làm hết; làm theo thứ tự phụ thuộc, từng giai đoạn một.
 4. **Viết bộ chuyển đổi dữ liệu** (adapter) từ mô hình của ứng dụng chủ sang mô hình trung lập ở mục 3, thay vì ép ứng dụng chủ đổi mô hình của nó.
 5. **Làm từng module, kiểm thử từng module** theo tiêu chí ở cuối mỗi mục; không làm một lần cả mười bốn module.
 6. **Không phá hành vi hiện có.** Chạy lại bộ kiểm thử có sẵn của ứng dụng chủ trước và sau khi thêm.
@@ -87,8 +89,9 @@ Hỏi người phụ trách khi gặp một trong các trường hợp sau, thay
 | M12 | Lưu trạng thái cục bộ | Nét vẽ, ghi chú, ghim, bố cục | M7, M9 | PHẢI |
 | M13 | Xuất tệp HTML độc lập | Một tệp, chạy ngoại tuyến | tất cả module đã chọn | CÓ THỂ |
 | M14 | Tiếp cận, cảm ứng, in | Nhãn, bàn phím, màn cảm ứng, in A4 | tất cả | PHẢI |
+| M15 | Làm bài trên lớp | Cả lớp làm trên thiết bị riêng, máy chủ chấm, xếp hạng, báo cáo (mục 21) | M1–M4, M11, máy chủ | CÓ THỂ |
 
-Gói tối thiểu có giá trị: **M1 + M2 + M3 + M4 + M5 + M12 + M14**.
+Gói tối thiểu có giá trị: **M1 + M2 + M3 + M4 + M5 + M12 + M14**. Thứ tự làm theo **bốn giai đoạn** ở mục 22: Nền tảng xem phiếu → Trình chiếu → Tương tác → Làm bài.
 
 ## 2. Nguyên tắc tích hợp vào ứng dụng có sẵn
 
@@ -98,7 +101,7 @@ Gói tối thiểu có giá trị: **M1 + M2 + M3 + M4 + M5 + M12 + M14**.
 |---|---|
 | Hiển thị, dàn trang, tương tác với phiếu | Đăng nhập, phân quyền, xác định vai trò giáo viên/học sinh |
 | Lưu trạng thái người dùng tạo ra khi xem (mục 15) | Lưu và quản lý nội dung phiếu gốc |
-| Chấm tại chỗ khi luyện tập (không lưu điểm) | Giao bài, thu bài, chấm điểm chính thức, lưu kết quả |
+| Chấm tại chỗ khi luyện tập (không lưu điểm) | Giao bài về nhà, chấm điểm chính thức, lưu kết quả lâu dài (riêng M15 chấm và xếp hạng tạm trong buổi học) |
 | Nhận dữ liệu qua giao diện (mục 3) | Nguồn dữ liệu, API, cơ sở dữ liệu |
 
 Trình xem **không** sửa nội dung phiếu gốc. Mọi thao tác của người dùng trong trình xem là lớp phủ.
@@ -722,7 +725,7 @@ Dán nguyên văn (sửa phần trong ngoặc) cùng tài liệu này:
 
 > Bạn sẽ bổ sung các tính năng ở tài liệu đính kèm vào ứng dụng hiện có trong thư mục này. Làm theo mục 0 của tài liệu.
 > 1. Đọc mã ứng dụng, xác định công nghệ giao diện, nơi lưu dữ liệu phiếu, cách phân quyền giáo viên/học sinh, bộ kiểm thử.
-> 2. Lập bảng đối chiếu M1–M14: đã có, thiếu, cách làm. Đưa tôi xem trước khi viết mã.
+> 2. Lập bảng đối chiếu M1–M15: đã có, thiếu, cách làm. Đưa tôi xem trước khi viết mã.
 > 3. Chỉ làm các module: **[liệt kê, ví dụ M1–M5, M12, M14]**. Bỏ: **[liệt kê]**.
 > 4. Viết bộ chuyển đổi từ mô hình phiếu của ứng dụng sang ViewerData (mục 3), không đổi mô hình hiện có.
 > 5. Đóng gói CSS để không ảnh hưởng giao diện sẵn có; dùng token màu của ứng dụng cho khung công cụ.
@@ -730,6 +733,180 @@ Dán nguyên văn (sửa phần trong ngoặc) cùng tài liệu này:
 > 7. Làm và kiểm thử từng module; chạy bộ kiểm thử sẵn có trước và sau.
 > 8. Báo cáo cuối: module đã làm, đã bỏ (lý do), điểm lệch tài liệu, cách chạy kiểm thử, rủi ro còn lại.
 > Hỏi tôi khi gặp trường hợp ở mục 0.3 thay vì tự quyết.
+
+## 21. Module M15. Làm bài trên lớp (CÓ THỂ, cần máy chủ)
+
+Cho cả lớp làm phiếu **trên thiết bị của từng học sinh** trong buổi học, giáo viên theo dõi và xem kết quả ngay. Khác M11: M11 là tự kiểm tức thời trên một màn hình, không lưu; M15 có nhiều học sinh, **có chấm và có xếp hạng**, nhưng chỉ trong phạm vi một buổi (không giao bài về nhà, không lưu điểm lâu dài trừ khi ứng dụng chủ tự làm).
+
+### 21.1. Nguyên tắc
+
+1. **Máy chủ giữ đáp án và chấm.** Đề gửi cho học sinh **không có khóa đáp án** (3.3); trình duyệt học sinh không bao giờ nhận đáp án, kể cả sau khi nộp (chỉ nhận kết quả đúng/sai từng câu và điểm).
+2. Máy chủ có thể là máy của giáo viên trong mạng cục bộ (Wi‑Fi lớp) hoặc dịch vụ của ứng dụng chủ. Tính năng **không chạy được khi mở tệp bằng `file://`** (M13): ghi rõ trong giao diện.
+3. Kết quả **lưu tạm trong bộ nhớ máy chủ**; tắt máy chủ là mất. Vì vậy giáo viên cần xuất báo cáo (21.6) trước khi tắt. Ứng dụng chủ muốn lưu lâu dài thì tự gắn qua lớp dịch vụ (21.8).
+4. Dùng lại trình xem M1–M4, M7, M8 cho giao diện học sinh dạng Phiếu; không viết lại phần hiển thị.
+
+### 21.2. Luồng chính
+
+1. **Giáo viên mở phiên** từ một phiếu đã sẵn sàng (vai trò giáo viên): chọn giao diện cho học sinh, **Phiếu** (mặc định) hoặc **Quiz**; nhận **mã phiên 4 ký tự** và địa chỉ vào lớp (với máy chủ trong mạng cục bộ: liệt kê các địa chỉ IP của máy, ví dụ `http://192.168.1.5:5173/lop?ma=XXXX`). Máy chủ nhận dữ liệu phiếu bản giáo viên, tách **đề** (không đáp án) và **khóa** (đáp án).
+2. **Học sinh vào**: mở địa chỉ (hoặc nhập mã phiên), nhập **tên** (tối đa 40 ký tự, gộp khoảng trắng; bắt buộc), nhận **mã cá nhân 4 ký tự** để vào lại nếu lỡ thoát. Nhập mã cá nhân sai thì báo lỗi, không tạo người mới. Phiên đã kết thúc thì người mới không vào được; người cũ vào lại để xem kết quả.
+3. **Học sinh làm bài**: mọi thay đổi tự gửi lên máy chủ (đáp án mỗi câu tối đa 300 ký tự; chỉ nhận mã câu có trong phiếu). Thoát ra vào lại bằng mã cá nhân thì **phục hồi đúng bài đã làm**.
+4. **Nộp bài**: bấm Nộp; từ đó không sửa được. Nộp rồi, hoặc khi phiên kết thúc, học sinh nhận kết quả (21.5).
+5. **Giáo viên kết thúc phiên**: sau đó không nhận bài nữa; có thể **mở lại** phiên.
+
+Đặt giới hạn số học sinh mỗi phiên (cấu hình được; gợi ý vài chục) và báo "Phiên đã đủ người." khi vượt.
+
+Mã phiên và mã cá nhân dùng bảng chữ **không dễ nhầm**: `23456789ABCDEFGHJKLMNPQRSTUVWXYZ` (bỏ 0, 1, I, O); không trùng trong cùng phạm vi; so khớp không phân biệt hoa thường.
+
+### 21.3. Giao diện học sinh
+
+**Dạng Phiếu**: học sinh thấy nguyên phiếu như bản giáo viên chiếu (cùng trình xem, có bút và công cụ trình bày, **không có đáp án, Quiz, Làm trên phiếu của M11**), và làm ngay trên phiếu:
+
+| Dạng | Cách làm | Giá trị gửi lên |
+|---|---|---|
+| `mcq`, `cloze_mcq` | Bấm một phương án (bấm lại để bỏ chọn) | chỉ số phương án, dạng chuỗi |
+| `tfng` | Bấm T, F hoặc NG | `"T"`, `"F"`, `"NG"` |
+| `fill_blank`, `word_form` | Gõ vào chỗ trống | chuỗi |
+| `rewrite`, `short_answer` | Gõ vào ô (gợi ý tối đa `maxWords` từ) | chuỗi |
+| `matching` | Chọn chữ cái trong hộp chọn ở từng hàng | chỉ số trong `rightList`, dạng chuỗi |
+| `ordering` | Bấm lần lượt các từ (từ đã dùng mờ đi); nút "Xếp lại từ đầu" | câu ghép (các từ cách nhau một dấu cách, thêm `punct` khi dùng hết từ) |
+
+Sau khi nộp (hoặc phiên kết thúc): phiếu **khóa**; câu đúng tô xanh, câu sai tô đỏ, câu bỏ trống tô đỏ kèm "Bỏ trống"; hiện số câu đúng và phần trăm.
+
+**Dạng Quiz**: mỗi lần một câu, nút lớn (như 14.3 nhưng không có Kiểm tra tức thời của giáo viên: học sinh chọn xong chuyển câu, đáp án chỉ chấm ở máy chủ), hợp điện thoại. Cuối là màn nộp và kết quả.
+
+**Bảng xếp hạng** (cả hai dạng): học sinh **đã nộp** (hoặc khi phiên kết thúc) bấm xem bảng xếp hạng cả lớp; dòng của mình được tô; **không lộ mã cá nhân người khác**. Chưa nộp mà đòi xem thì báo "Nộp bài rồi mới xem được bảng xếp hạng."
+
+### 21.4. Xáo đáp án theo từng học sinh
+
+Để giảm chép bài, hệ thống tự xáo, không hỏi giáo viên:
+
+- **Có xáo**: thứ tự phương án của `mcq` và `cloze_mcq`; thứ tự cột phải `rightList` của `matching`.
+- **Không xáo**: `tfng`, `ordering`, các dạng tự điền, và câu có phương án kiểu "All of the above", "None of the above", "A and B", "Both A and B" (nhận diện bằng biểu thức chính quy; câu nào có phương án như vậy thì giữ nguyên thứ tự).
+- Hoán vị **cố định theo mã phiên + mã cá nhân + mã câu** (cùng người vào lại thấy cùng thứ tự); tránh hoán vị trùng thứ tự gốc.
+- Máy chủ **đổi đáp án về thứ tự gốc trước khi lưu và chấm**; khi gửi lại cho học sinh thì đổi sang thứ tự riêng. Giáo viên luôn xem theo thứ tự gốc.
+
+### 21.5. Chấm
+
+Chuẩn hóa như 14.1. Câu chưa trả lời (rỗng) là "bỏ trống", không tính đúng cũng không tính sai nhưng vẫn nằm trong tổng.
+
+| Dạng | Đúng khi |
+|---|---|
+| `mcq` | Phương án chọn có `id === correctId` |
+| `cloze_mcq` | Chỉ số `=== correctIdx` |
+| `tfng` | Bằng `answer` |
+| `matching` | `rightList[chọn] === right` |
+| `ordering` | Chuẩn hóa bằng `answerText` đã chuẩn hóa |
+| `fill_blank`, `word_form`, `rewrite` | Chuẩn hóa trùng một mục của `accepted` |
+| `short_answer` | Trùng một mục của `accepted`, hoặc câu trả lời **chứa** một mục của `accepted` dài hơn 2 ký tự |
+
+(Khác M11: ở M15, `rewrite` và `short_answer` **được chấm tự động** theo `accepted`; giáo viên xem lại bài từng em nếu cần chấm tay.)
+
+Kết quả một học sinh: `{correct, answered, total, pct, perQ: {mãCâu: true|false|null}}`.
+
+### 21.6. Màn giáo viên
+
+- **Danh sách học sinh** tự cập nhật (hỏi máy chủ định kỳ, khoảng vài giây, hoặc đẩy sự kiện): tên, mã cá nhân, đã nộp hay chưa, số câu đã làm, điểm.
+- **Mở bài từng học sinh**: dạng Phiếu mở đúng phiếu có bài làm của em (câu đúng xanh, sai đỏ, theo thứ tự gốc), vẫn dùng được bút, công cụ trình bày, bật đáp án của M5, nút chuyển em trước/em sau; dạng Quiz hiện bảng từng câu (câu, đáp án em chọn, đáp án đúng).
+- **Tổng hợp cả phiên**: số học sinh, số đã nộp, điểm trung bình (%); **bảng xếp hạng** (sắp theo số câu đúng giảm dần, đồng điểm thì ai nộp sớm hơn, rồi theo tên; đồng số câu đúng chung hạng); **biểu đồ tỉ lệ đúng theo từng bài** (đúng/sai/bỏ trống); **5 câu sai nhiều nhất** (kèm đáp án đúng).
+- **Kết thúc phiên / Mở lại phiên.**
+- **Xuất ảnh báo cáo PNG** (xếp hạng, biểu đồ, câu sai nhiều) để giáo viên giữ trước khi tắt máy chủ.
+
+### 21.7. Giao diện lập trình (gợi ý, đặt tên theo ứng dụng chủ)
+
+Tất cả là yêu cầu gửi dữ liệu JSON, trả về JSON; lỗi trả mã trạng thái HTTP và thông điệp ngắn.
+
+| Việc | Gửi | Trả về |
+|---|---|---|
+| Mở phiên | `data` (ViewerData bản giáo viên), `mode` (`sheet`\|`quiz`) | `code`, `token` (chỉ giáo viên giữ), địa chỉ vào lớp |
+| Trạng thái (giáo viên) | `code`, `token` | Danh sách học sinh, tổng hợp (21.6), `mode`, `ended` |
+| Kết thúc / Mở lại | `code`, `token` | Trạng thái như trên |
+| Học sinh vào | `code`, `name` (lần đầu) hoặc `studentCode` (vào lại) | `studentCode`, `name`, **đề riêng của em** (không đáp án, đã xáo), `answers` đã làm, `submittedAt`, `ended`, `result` (chỉ khi đã nộp hoặc phiên kết thúc) |
+| Gửi bài | `code`, `studentCode`, `answers: {mãCâu: giáTrị}`, `submit` (bool) | `saved`, `submittedAt`, `result` khi nộp |
+| Bảng xếp hạng (học sinh) | `code`, `studentCode` | Danh sách `{rank, name, correct, total, pct, submitted, me}`, hạng của em, số học sinh, số đã nộp, điểm trung bình |
+
+Mã lỗi gợi ý: 400 thiếu tên hoặc phiếu rỗng; 404 mã phiên hoặc mã cá nhân sai; 409 phiên đã kết thúc, đã nộp rồi, phiên đầy, hoặc xem xếp hạng khi chưa nộp.
+
+Mọi thao tác của giáo viên cần `token` do máy chủ cấp khi mở phiên; thao tác của học sinh cần mã phiên và mã cá nhân.
+
+### 21.8. Ranh giới với ứng dụng chủ
+
+Tách phần này thành **một lớp dịch vụ thay được** (giao diện như bảng 21.7): bản đơn giản là máy chủ nhỏ trong bộ nhớ; ứng dụng chủ có backend thì cài lớp thật (phiên gắn tài khoản giáo viên, học sinh gắn danh sách lớp, lưu lâu dài). Phần chấm, xáo, tổng hợp là **hàm thuần dùng chung** giữa máy chủ và các kiểm thử (mục 18.3).
+
+### 21.9. Nghiệm thu M15
+
+- [ ] Đề gửi học sinh **không có khóa đáp án** (kiểm bằng cách quét phản hồi `join`).
+- [ ] Hai học sinh cùng phiên thấy thứ tự phương án khác nhau; vào lại cùng mã thì thứ tự giữ nguyên; giáo viên thấy theo thứ tự gốc; câu có "All of the above" không bị xáo.
+- [ ] Thoát giữa chừng rồi vào lại bằng mã cá nhân: bài đã làm được phục hồi.
+- [ ] Nộp rồi: phiếu khóa, gửi thêm đáp án bị từ chối (409); câu đúng xanh, sai/bỏ trống đỏ, có điểm.
+- [ ] Chưa nộp thì không xem được bảng xếp hạng; sau khi nộp xem được, dòng mình được tô, không lộ mã người khác.
+- [ ] Màn giáo viên: danh sách học sinh tự cập nhật; mở bài từng em đúng; bảng xếp hạng, biểu đồ theo bài, câu sai nhiều nhất đúng; kết thúc và mở lại; xuất được ảnh PNG.
+- [ ] Chạy với tối thiểu 20 học sinh giả lập không lỗi; mã lỗi đúng ở các trường hợp 21.7.
+
+## 22. Các giai đoạn thực hiện
+
+Chia việc thành bốn giai đoạn, **mỗi giai đoạn chạy được và nghiệm thu được trước khi sang giai đoạn sau**. Thứ tự này theo đúng cách sản phẩm gốc được xây dựng: có khả năng **xem phiếu** → **trình chiếu** → **tương tác** → **làm bài thật trên lớp**.
+
+| Giai đoạn | Tên | Module | Phụ thuộc |
+|---|---|---|---|
+| GĐ0 | Nền tảng xem phiếu | M1, M2 (L1–L4), M3 cơ bản, M4 cơ bản, M5, M6, M12, M14; M13 nếu cần | Mô hình dữ liệu (mục 3) |
+| GĐ1 | **Trình chiếu** | M4 đầy đủ, M7, M8, M9, M10; hoàn thiện M2 (L5, L6) và M3 (giữ trọn, ngắt trang) | GĐ0 |
+| GĐ2 | **Tương tác** | M11 | GĐ0 (đáp án), GĐ1 (phản hồi nổi trên trình xem) |
+| GĐ3 | **Làm bài** | M15 | GĐ0, GĐ1 (trình xem), GĐ2 (so khớp, phản hồi) |
+
+Một ứng dụng chủ đã có sẵn một số phần thì **bỏ qua phần đã có** nhưng vẫn chạy phần nghiệm thu của giai đoạn đó.
+
+### 22.1. GĐ0. Nền tảng xem phiếu
+
+- **Mục tiêu**: mở được một phiếu, thấy đúng như bản in, đọc đáp án, dùng được media. Giáo viên chiếu hoặc in được.
+- **Làm**: bộ chuyển đổi dữ liệu (mục 3); hiển thị chín dạng câu (M1); bố cục L1–L4 và quy tắc lùi (M2); phân trang A4 với đo thật (M3: 6.1–6.5, chưa cần giữ trọn nâng cao nếu ứng dụng chủ chưa cần); chế độ Trang và Cuộn, thanh công cụ, đi tới, zoom cơ bản (M4: 7.1–7.4 trừ Trình chiếu, 2 trang, phóng vùng); đáp án bốn cấp trừ "lần lượt" (M5); ảnh phóng, trình phát audio, video mô phỏng (M6); lưu cục bộ ghim, bố cục (M12 cơ bản); nhãn truy cập, cảm ứng, in (M14).
+- **Thứ tự gợi ý**: dữ liệu và adapter → M1 → M2 → M3 → M4 cơ bản → M5 → M6 → M14.
+- **Nghiệm thu**: mục 4.4, 5, 6 (M3), 8 (M5, bốn cấp), 9.4 (M6) đạt; vai trò học sinh không có phần tử đáp án; số trang ổn định.
+- **Không làm**: bút vẽ, trình chiếu, quiz.
+
+### 22.2. GĐ1. Trình chiếu
+
+- **Mục tiêu**: giáo viên dùng phiếu để **dạy trên lớp qua máy chiếu hoặc bảng tương tác**: chiếu toàn màn hình, viết lên phiếu, che hé nội dung, điều khiển nhịp buổi học.
+- **Làm**, theo thứ tự:
+  1. **Chế độ nâng cao** (M4): Trình chiếu toàn màn hình với thanh tự ẩn, 2 trang cạnh nhau lật theo cặp, phóng vùng, vừa ngang/vừa cao.
+  2. **Bút vẽ chú thích** (M7) và **lưu nét vẽ** (M12): Con trỏ mặc định, Bút khóa cho cảm ứng, vẽ theo phím giữ, tẩy, hoàn tác.
+  3. **Thao tác theo bài** (M9): phóng to một bài và chuyển bài, ghim, ghi chú giáo viên.
+  4. **Công cụ trình bày** (M8): che câu, rèm, tối/trắng màn, đèn rọi, hiện đáp án lần lượt, đồng hồ, bảng trắng.
+  5. **Bảng nhanh** (M10) nháy đúp.
+  6. **Hoàn thiện dàn trang** cho phiếu chiếu và in: L5, L6; giữ trọn bài, ngắt trang, tách bài đoạn văn dài (M2, M3).
+- **Nghiệm thu**: mục 7 (trình chiếu, 2 trang, phóng vùng), 10 (M7), 11 (M8), 12 (M9), 13 (M10), 15 (M12) đạt; trên máy tính bảng có bút vẽ được, không cuộn trang khi vẽ; đổi chế độ không mất nét vẽ.
+- **Không làm**: chấm đúng/sai, quiz.
+
+### 22.3. GĐ2. Tương tác
+
+- **Mục tiêu**: **học sinh (hoặc giáo viên cùng lớp) trả lời ngay trên màn hình chiếu** và thấy đúng/sai tức thì, **không lưu**, không cần máy chủ.
+- **Làm**, theo thứ tự:
+  1. **Thư viện phản hồi đúng/sai** (14.4): hình, lời, âm tổng hợp, chọn ngẫu nhiên không lặp liền kề; cấu hình bật/tắt từng mục (`feedback`).
+  2. **Quiz** (14.3): một câu mỗi lần, kiểm tra, tổng kết `x/y` không lưu.
+  3. **Tùy chọn Quiz**: xáo câu, thử lại, hiện đáp án sau khi sai, hẹn giờ, tắt tiếng.
+  4. **Làm trên phiếu** (14.2): chọn, điền, nối, sắp xếp ngay trên trang, tô xanh/đỏ, bộ đếm.
+  5. Lối vào Quiz và Làm trên phiếu ở nơi giáo viên thường mở phiếu (ví dụ từ trình soạn hoặc màn xem trước của ứng dụng chủ).
+- **Nghiệm thu**: mục 14 (M11) đạt; vai trò học sinh không thấy M11; tắt "Làm trên phiếu" đưa phiếu về nguyên bản.
+- **Không làm**: lưu điểm, nhiều học sinh, máy chủ chấm. (Phạm vi cố ý hẹp: chỉ tự kiểm tức thời.)
+
+### 22.4. GĐ3. Làm bài
+
+- **Mục tiêu**: **cả lớp làm phiếu trên thiết bị của mình**, máy chủ chấm, giáo viên thấy kết quả cả lớp ngay trong buổi học.
+- **Làm**, theo thứ tự:
+  1. **Máy chủ và vòng đời phiên** (21.1, 21.2, 21.7): mở phiên, mã phiên, vào lớp bằng tên và mã cá nhân, tự lưu, nộp, kết thúc/mở lại. Tách đề và khóa; lớp dịch vụ thay được (21.8).
+  2. **Chấm phía máy chủ** (21.5) và **kết quả sau nộp** (tô xanh/đỏ, điểm).
+  3. **Giao diện học sinh dạng Phiếu** (21.3): dùng lại trình xem vai trò học sinh, thêm ô làm bài thật.
+  4. **Giao diện học sinh dạng Quiz** cho điện thoại nhỏ.
+  5. **Xáo đáp án theo từng em** (21.4).
+  6. **Bảng xếp hạng** cho học sinh đã nộp.
+  7. **Màn giáo viên** (21.6): danh sách tự cập nhật, mở bài từng em, tổng hợp, biểu đồ, câu sai nhiều, **xuất ảnh báo cáo PNG**.
+- **Nghiệm thu**: mục 21.9 đạt; kiểm thử máy chủ tự động (chấm, xáo, tổng hợp, mã lỗi) chạy được không cần trình duyệt.
+- **Không làm**: giao bài về nhà, lưu điểm lâu dài, quản lý lớp theo năm học (thuộc ứng dụng chủ).
+- **Lưu ý triển khai**: máy chủ trong mạng cục bộ cần được tường lửa cho phép; một số Wi‑Fi trường chặn các máy nói chuyện với nhau, khi đó dùng điểm phát Wi‑Fi của máy giáo viên.
+
+### 22.5. Điều kiện chuyển giai đoạn
+
+Chỉ sang giai đoạn kế khi: (a) toàn bộ nghiệm thu giai đoạn hiện tại đạt; (b) bộ kiểm thử sẵn có của ứng dụng chủ vẫn đạt; (c) người phụ trách đã xem thử trên thiết bị thật (máy chiếu hoặc máy tính bảng ở GĐ1, điện thoại ở GĐ3); (d) báo cáo cuối giai đoạn nêu module đã làm, đã bỏ và điểm lệch tài liệu.
+
 
 ---
 
