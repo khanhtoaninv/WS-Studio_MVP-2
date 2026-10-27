@@ -30,7 +30,7 @@
 19. Kiểm thử và nghiệm thu
 20. Câu lệnh mẫu giao cho AI
 21. Module M15. Làm bài trên lớp
-22. Các giai đoạn thực hiện
+22. Các giai đoạn thực hiện (tiền đề, ba giai đoạn)
 - Phụ lục A. Bảng giá trị tham chiếu
 - Phụ lục B. Ví dụ dữ liệu
 - Phụ lục C. Bảng âm thanh phản hồi
@@ -91,7 +91,7 @@ Hỏi người phụ trách khi gặp một trong các trường hợp sau, thay
 | M14 | Tiếp cận, cảm ứng, in | Nhãn, bàn phím, màn cảm ứng, in A4 | tất cả | PHẢI |
 | M15 | Làm bài trên lớp | Cả lớp làm trên thiết bị riêng, máy chủ chấm, xếp hạng, báo cáo (mục 21) | M1–M4, M11, máy chủ | CÓ THỂ |
 
-Gói tối thiểu có giá trị: **M1 + M2 + M3 + M4 + M5 + M12 + M14**. Thứ tự làm theo **bốn giai đoạn** ở mục 22: Nền tảng xem phiếu → Trình chiếu → Tương tác → Làm bài.
+Các module M1–M6 là **nền xem phiếu**: ứng dụng chủ thường đã có (mục 22.0), khi đó chỉ dùng làm mô tả tham chiếu. Phần cần làm chia thành **ba giai đoạn** ở mục 22: Trình chiếu → Tương tác → Làm bài.
 
 ## 2. Nguyên tắc tích hợp vào ứng dụng có sẵn
 
@@ -725,7 +725,7 @@ Dán nguyên văn (sửa phần trong ngoặc) cùng tài liệu này:
 
 > Bạn sẽ bổ sung các tính năng ở tài liệu đính kèm vào ứng dụng hiện có trong thư mục này. Làm theo mục 0 của tài liệu.
 > 1. Đọc mã ứng dụng, xác định công nghệ giao diện, nơi lưu dữ liệu phiếu, cách phân quyền giáo viên/học sinh, bộ kiểm thử.
-> 2. Lập bảng đối chiếu M1–M15: đã có, thiếu, cách làm. Đưa tôi xem trước khi viết mã.
+> 2. Lập bảng đối chiếu M1–M15: đã có, thiếu, cách làm. Phần nền xem phiếu và chấm đúng/sai app đã có sẵn (mục 22.0): chỉ kiểm tra, không viết lại. Đưa tôi xem trước khi viết mã.
 > 3. Chỉ làm các module: **[liệt kê, ví dụ M1–M5, M12, M14]**. Bỏ: **[liệt kê]**.
 > 4. Viết bộ chuyển đổi từ mô hình phiếu của ứng dụng sang ViewerData (mục 3), không đổi mô hình hiện có.
 > 5. Đóng gói CSS để không ảnh hưởng giao diện sẵn có; dùng token màu của ứng dụng cho khung công cụ.
@@ -844,26 +844,28 @@ Tách phần này thành **một lớp dịch vụ thay được** (giao diện 
 
 ## 22. Các giai đoạn thực hiện
 
-Chia việc thành bốn giai đoạn, **mỗi giai đoạn chạy được và nghiệm thu được trước khi sang giai đoạn sau**. Thứ tự này theo đúng cách sản phẩm gốc được xây dựng: có khả năng **xem phiếu** → **trình chiếu** → **tương tác** → **làm bài thật trên lớp**.
+Chia việc thành **ba giai đoạn**, **mỗi giai đoạn chạy được và nghiệm thu được trước khi sang giai đoạn sau**: **GĐ1 Trình chiếu** → **GĐ2 Tương tác** → **GĐ3 Làm bài**. Thứ tự này theo đúng cách sản phẩm gốc được xây dựng.
 
 | Giai đoạn | Tên | Module | Phụ thuộc |
 |---|---|---|---|
-| GĐ0 | Nền tảng xem phiếu | M1, M2 (L1–L4), M3 cơ bản, M4 cơ bản, M5, M6, M12, M14; M13 nếu cần | Mô hình dữ liệu (mục 3) |
-| GĐ1 | **Trình chiếu** | M4 đầy đủ, M7, M8, M9, M10; hoàn thiện M2 (L5, L6) và M3 (giữ trọn, ngắt trang) | GĐ0 |
-| GĐ2 | **Tương tác** | M11 | GĐ0 (đáp án), GĐ1 (phản hồi nổi trên trình xem) |
-| GĐ3 | **Làm bài** | M15 | GĐ0, GĐ1 (trình xem), GĐ2 (so khớp, phản hồi) |
+| GĐ1 | **Trình chiếu** | M4 đầy đủ, M7, M8, M9, M10, M12; hoàn thiện M2 (L5, L6) và M3 (giữ trọn, ngắt trang) | Tiền đề 22.0 |
+| GĐ2 | **Tương tác** | M11 | Tiền đề 22.0, GĐ1 (phản hồi nổi trên trình xem) |
+| GĐ3 | **Làm bài** | M15 | Tiền đề 22.0, GĐ1 (trình xem), GĐ2 (so khớp, phản hồi) |
 
-Một ứng dụng chủ đã có sẵn một số phần thì **bỏ qua phần đã có** nhưng vẫn chạy phần nghiệm thu của giai đoạn đó.
+### 22.0. Tiền đề (không phải giai đoạn): ứng dụng chủ đã có sẵn
 
-### 22.1. GĐ0. Nền tảng xem phiếu
+Tài liệu này **giả định** ứng dụng chủ đã có phần nền, nên **không có giai đoạn nền tảng**:
 
-- **Mục tiêu**: mở được một phiếu, thấy đúng như bản in, đọc đáp án, dùng được media. Giáo viên chiếu hoặc in được.
-- **Làm**: bộ chuyển đổi dữ liệu (mục 3); hiển thị chín dạng câu (M1); bố cục L1–L4 và quy tắc lùi (M2); phân trang A4 với đo thật (M3: 6.1–6.5, chưa cần giữ trọn nâng cao nếu ứng dụng chủ chưa cần); chế độ Trang và Cuộn, thanh công cụ, đi tới, zoom cơ bản (M4: 7.1–7.4 trừ Trình chiếu, 2 trang, phóng vùng); đáp án bốn cấp trừ "lần lượt" (M5); ảnh phóng, trình phát audio, video mô phỏng (M6); lưu cục bộ ghim, bố cục (M12 cơ bản); nhãn truy cập, cảm ứng, in (M14).
-- **Thứ tự gợi ý**: dữ liệu và adapter → M1 → M2 → M3 → M4 cơ bản → M5 → M6 → M14.
-- **Nghiệm thu**: mục 4.4, 5, 6 (M3), 8 (M5, bốn cấp), 9.4 (M6) đạt; vai trò học sinh không có phần tử đáp án; số trang ổn định.
-- **Không làm**: bút vẽ, trình chiếu, quiz.
+- dựng và hiển thị phiếu từ dữ liệu: chín dạng câu, bố cục, phân trang A4, đáp án, media (tương ứng M1–M6, M14);
+- xác định **đúng/sai** của câu trả lời (so khớp đáp án, tương ứng 14.1 và phần chấm 21.5);
+- phân biệt vai trò giáo viên và học sinh, không để đáp án lọt sang bản học sinh (mục 18.1).
 
-### 22.2. GĐ1. Trình chiếu
+Cách xử lý cho AI thực hiện:
+1. **Không viết lại** những phần trên. Mục 3 đến 9 chỉ là **mô tả tham chiếu** để hiểu các giai đoạn sau bám vào đâu.
+2. Trước GĐ1, **kiểm tra nhanh** các điểm mà giai đoạn sau cần từ nền: trang A4 đã đo và có kích thước cố định để đặt lớp vẽ lên (mục 6, 10); mỗi bài và mỗi câu có mã `id` ổn định (3.2, 3.3); có hàm so khớp đúng/sai dùng lại được (14.1); có cờ vai trò giáo viên/học sinh. Nếu một điểm **thiếu hoặc khác**, ghi vào bảng đối chiếu (mục 0.2) và **hỏi người phụ trách** (mục 0.3) thay vì tự làm thêm cả module nền.
+3. Dùng **bộ chuyển đổi dữ liệu** (mục 3) nối mô hình của ứng dụng chủ với phần mới nếu cần; không ép đổi mô hình.
+
+### 22.1. GĐ1. Trình chiếu
 
 - **Mục tiêu**: giáo viên dùng phiếu để **dạy trên lớp qua máy chiếu hoặc bảng tương tác**: chiếu toàn màn hình, viết lên phiếu, che hé nội dung, điều khiển nhịp buổi học.
 - **Làm**, theo thứ tự:
@@ -876,7 +878,7 @@ Một ứng dụng chủ đã có sẵn một số phần thì **bỏ qua phần
 - **Nghiệm thu**: mục 7 (trình chiếu, 2 trang, phóng vùng), 10 (M7), 11 (M8), 12 (M9), 13 (M10), 15 (M12) đạt; trên máy tính bảng có bút vẽ được, không cuộn trang khi vẽ; đổi chế độ không mất nét vẽ.
 - **Không làm**: chấm đúng/sai, quiz.
 
-### 22.3. GĐ2. Tương tác
+### 22.2. GĐ2. Tương tác
 
 - **Mục tiêu**: **học sinh (hoặc giáo viên cùng lớp) trả lời ngay trên màn hình chiếu** và thấy đúng/sai tức thì, **không lưu**, không cần máy chủ.
 - **Làm**, theo thứ tự:
@@ -888,7 +890,7 @@ Một ứng dụng chủ đã có sẵn một số phần thì **bỏ qua phần
 - **Nghiệm thu**: mục 14 (M11) đạt; vai trò học sinh không thấy M11; tắt "Làm trên phiếu" đưa phiếu về nguyên bản.
 - **Không làm**: lưu điểm, nhiều học sinh, máy chủ chấm. (Phạm vi cố ý hẹp: chỉ tự kiểm tức thời.)
 
-### 22.4. GĐ3. Làm bài
+### 22.3. GĐ3. Làm bài
 
 - **Mục tiêu**: **cả lớp làm phiếu trên thiết bị của mình**, máy chủ chấm, giáo viên thấy kết quả cả lớp ngay trong buổi học.
 - **Làm**, theo thứ tự:
@@ -903,9 +905,9 @@ Một ứng dụng chủ đã có sẵn một số phần thì **bỏ qua phần
 - **Không làm**: giao bài về nhà, lưu điểm lâu dài, quản lý lớp theo năm học (thuộc ứng dụng chủ).
 - **Lưu ý triển khai**: máy chủ trong mạng cục bộ cần được tường lửa cho phép; một số Wi‑Fi trường chặn các máy nói chuyện với nhau, khi đó dùng điểm phát Wi‑Fi của máy giáo viên.
 
-### 22.5. Điều kiện chuyển giai đoạn
+### 22.4. Điều kiện chuyển giai đoạn
 
-Chỉ sang giai đoạn kế khi: (a) toàn bộ nghiệm thu giai đoạn hiện tại đạt; (b) bộ kiểm thử sẵn có của ứng dụng chủ vẫn đạt; (c) người phụ trách đã xem thử trên thiết bị thật (máy chiếu hoặc máy tính bảng ở GĐ1, điện thoại ở GĐ3); (d) báo cáo cuối giai đoạn nêu module đã làm, đã bỏ và điểm lệch tài liệu.
+Chỉ sang giai đoạn kế khi: (a) toàn bộ nghiệm thu giai đoạn hiện tại đạt (GĐ1 còn kiểm lại các điểm tiền đề ở 22.0); (b) bộ kiểm thử sẵn có của ứng dụng chủ vẫn đạt; (c) người phụ trách đã xem thử trên thiết bị thật (máy chiếu hoặc máy tính bảng ở GĐ1, điện thoại ở GĐ3); (d) báo cáo cuối giai đoạn nêu module đã làm, đã bỏ và điểm lệch tài liệu.
 
 
 ---
