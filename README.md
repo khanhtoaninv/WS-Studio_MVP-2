@@ -2,7 +2,7 @@
 
 Soạn, kiểm tra tiêu chuẩn, duyệt và xuất phiếu bài tập. Giao diện tiếng Việt, nội dung phiếu tiếng Anh.
 
-Đặc tả: [`docs/ws-studio-mvp-spec.md`](docs/ws-studio-mvp-spec.md). Quy tắc làm việc cho Claude: [`CLAUDE.md`](CLAUDE.md). Tiếp tục dự án bằng tài khoản GitHub hoặc Claude khác: [`docs/chuyen-tai-khoan.md`](docs/chuyen-tai-khoan.md). Tài liệu tham khảo (thảo luận, đánh giá giao diện, mã bản cũ v1): [`docs/tham-khao/`](docs/tham-khao/).
+Đặc tả: [`docs/ws-studio-mvp-spec.md`](docs/ws-studio-mvp-spec.md). Quy tắc làm việc cho Claude: [`CLAUDE.md`](CLAUDE.md). Tiếp tục dự án bằng tài khoản GitHub hoặc Claude khác: [`docs/chuyen-tai-khoan.md`](docs/chuyen-tai-khoan.md). Tài liệu tham khảo (thảo luận, đánh giá giao diện, mã bản cũ v1): [`docs/tham-khao/`](docs/tham-khao/). Đặc tả tệp HTML phiếu xuất ra, để hệ thống khác dựng tệp tương đương: [`docs/html-phieu/dac-ta-html-phieu.md`](docs/html-phieu/dac-ta-html-phieu.md) (kèm tệp mẫu, tạo lại bằng `python tools/tao_mau_html.py`). Bản trung lập, không gắn với app này, để đưa AI thêm tính năng vào app khác: [`docs/dac-ta-tinh-nang-trinh-xem-phieu.md`](docs/dac-ta-tinh-nang-trinh-xem-phieu.md).
 
 Bản v2 giữ nguyên chức năng của prototype (nay là 292 kiểm tra t1–t9, đều đạt) nhưng đổi cấu trúc để:
 
@@ -94,7 +94,8 @@ src/
     ui.js, app.js, views/*.js, styles/*.css
 tests/                  t1–t9 (Playwright, chạy trên dist/ws-studio.html), e2e/ cho máy chủ
 tools/fetch_fonts.py    Tạo lại font nhúng
-docs/                   Đặc tả, hướng dẫn chuyển tài khoản, tham-khao/ (tài liệu và mã bản cũ v1)
+tools/tao_mau_html.py   Tạo lại tệp mẫu của đặc tả tệp HTML phiếu (docs/html-phieu/)
+docs/                   Đặc tả, đặc tả tệp HTML phiếu (html-phieu/), hướng dẫn chuyển tài khoản, tham-khao/ (tài liệu và mã bản cũ v1)
 ```
 
 Luật phụ thuộc: `domain/` không gọi giao diện; `ui/` đọc store và gọi `A.*` hoặc `WS.services.*`; chỉ `services/` được gọi mạng hoặc lưu trữ. Ngoại lệ còn lại: vài hành động trong `state/actions.js` tự mở hộp xác nhận (`WS.UI.confirm/modal/prompt`), xem bước 5 bên dưới.

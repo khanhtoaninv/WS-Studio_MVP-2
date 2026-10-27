@@ -8,7 +8,8 @@ Dự án ws-studio: app soạn phiếu bài tập. Chỉ soạn, kiểm tra tiê
 1. `docs/ws-studio-mvp-spec.md`: đặc tả. Mục 19A là bảng quyết định D-xx, mục 21 là nhật ký thay đổi.
 2. `README.md`: cách chạy, kiểm thử, cấu trúc mã, lộ trình sang React.
 3. `docs/chuyen-tai-khoan.md`: cách tiếp tục dự án từ tài khoản khác.
-4. `docs/tham-khao/`: tài liệu thảo luận, ảnh đánh giá giao diện, skill giao diện, mã bản cũ v1 (`ws-studio-v1.zip`, chỉ để đối chiếu).
+4. `docs/html-phieu/dac-ta-html-phieu.md`: đặc tả tệp HTML phiếu xuất ra (D-139). Đổi `src/viewer/` hoặc `src/domain/export.js` thì sửa tài liệu này và chạy `python tools/tao_mau_html.py` để tạo lại tệp mẫu. Bản trung lập `docs/dac-ta-tinh-nang-trinh-xem-phieu.md` (D-140): khi đổi hành vi viewer thì cập nhật cả bản này, nhưng giữ nó không nhắc tên app, mã D-xx, tên tệp hay hàm.
+5. `docs/tham-khao/`: tài liệu thảo luận, ảnh đánh giá giao diện, skill giao diện, mã bản cũ v1 (`ws-studio-v1.zip`, chỉ để đối chiếu).
 
 ## Hiện trạng
 
