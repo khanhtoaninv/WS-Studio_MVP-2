@@ -2,7 +2,7 @@
 
 Soạn, kiểm tra tiêu chuẩn, duyệt và xuất phiếu bài tập. Giao diện tiếng Việt, nội dung phiếu tiếng Anh.
 
-Đặc tả: [`docs/ws-studio-mvp-spec.md`](docs/ws-studio-mvp-spec.md). Quy tắc làm việc cho Claude: [`CLAUDE.md`](CLAUDE.md). Tiếp tục dự án bằng tài khoản GitHub hoặc Claude khác: [`docs/chuyen-tai-khoan.md`](docs/chuyen-tai-khoan.md). Tài liệu tham khảo (thảo luận, đánh giá giao diện, mã bản cũ v1): [`docs/tham-khao/`](docs/tham-khao/). Đặc tả tệp HTML phiếu xuất ra, để hệ thống khác dựng tệp tương đương: [`docs/html-phieu/dac-ta-html-phieu.md`](docs/html-phieu/dac-ta-html-phieu.md) (kèm tệp mẫu, tạo lại bằng `python tools/tao_mau_html.py`).
+Đặc tả: [`docs/ws-studio-mvp-spec.md`](docs/ws-studio-mvp-spec.md). Quy tắc làm việc cho Claude: [`CLAUDE.md`](CLAUDE.md). Tiếp tục dự án bằng tài khoản GitHub hoặc Claude khác: [`docs/chuyen-tai-khoan.md`](docs/chuyen-tai-khoan.md). Tài liệu tham khảo (thảo luận, đánh giá giao diện, mã bản cũ v1): [`docs/tham-khao/`](docs/tham-khao/). Đặc tả tệp HTML phiếu xuất ra, để hệ thống khác dựng tệp tương đương: [`docs/html-phieu/dac-ta-html-phieu.md`](docs/html-phieu/dac-ta-html-phieu.md) (kèm tệp mẫu, tạo lại bằng `python tools/tao_mau_html.py`). Bản trung lập, không gắn với app này, để đưa AI thêm tính năng vào app khác: [`docs/dac-ta-tinh-nang-trinh-xem-phieu.md`](docs/dac-ta-tinh-nang-trinh-xem-phieu.md).
 
 Bản v2 giữ nguyên chức năng của prototype (nay là 292 kiểm tra t1–t9, đều đạt) nhưng đổi cấu trúc để:
 
